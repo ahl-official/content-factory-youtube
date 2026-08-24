@@ -1,0 +1,61 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Vercel
+.vercel/
+
+# Build
+dist/
+frontend/dist/
+build/
+
+# Logs
+*.log
+
+# Development / temporary
+development/
+debug/
+debug*/
+tmp/
+temp/
+
+# Generated outputs
+outputs/
+output/
+raw_response/
+agent_outputs/
+
+# Tests
+test_*.js
+*_test.js
+tests/
+
+# Local memory/cache
+memory/
+
+# Archives
+*.tar.gz
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Credentials
+credentials.json
+service-account.json
+
+# Runtime
+*.pid
+coverage/
+
+frontend/eslint_output.txt
