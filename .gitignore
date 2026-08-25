@@ -59,3 +59,4 @@ service-account.json
 coverage/
 
 frontend/eslint_output.txt
+.vercel
