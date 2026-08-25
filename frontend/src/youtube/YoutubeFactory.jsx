@@ -1488,37 +1488,40 @@ function YoutubeWorkspace({ project, onBack }) {
                                     {jsonData.confidenceNotes}
                                 </div>
                             )}
-                            {jsonData.topicOpportunities.map((t, idx) => (
-                                <div key={t.id || idx} style={{
-                                    background: 'rgba(0,0,0,0.2)',
-                                    border: '1px solid rgba(255,255,255,0.08)',
-                                    borderRadius: '12px', padding: '1.2rem', transition: 'all 0.2s', position: 'relative'
-                                }}>
-                                    <div style={{ position: 'absolute', top: '-10px', left: '-10px', background: '#3f3f46', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '0.9rem', color: '#fff', border: '2px solid #18181b', zIndex: 2 }}>
-                                        {idx + 1}
-                                    </div>
-                                    <h3 style={{ margin: '0 0 0.8rem 0', fontSize: '1.1rem', color: '#f4f4f5' }}>{t.topicIdea}</h3>
-                                    <div style={{ fontSize: '0.85rem', color: '#d4d4d8', marginBottom: '0.8rem', lineHeight: '1.5' }}>
-                                        <b style={{ color: '#a1a1aa' }}>Why It Works:</b> {t.whyItWorks}
-                                    </div>
-                                    <div style={{ fontSize: '0.85rem', color: '#d4d4d8', marginBottom: '1.2rem', lineHeight: '1.5' }}>
-                                        <b style={{ color: '#a1a1aa' }}>Target Audience:</b> {t.targetAudience}
-                                    </div>
-
-                                    {fullProject.ResearchBehavior === 'suggest_topics' && (
-                                        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                                            <button
-                                                onClick={() => handleSelectTopic(t.topicIdea)}
-                                                style={{
-                                                    background: '#34d399', color: '#000', border: 'none', padding: '0.6rem 1.2rem',
-                                                    borderRadius: '6px', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', transition: '0.2s'
-                                                }}>
-                                                Select this Subject
-                                            </button>
+                            {jsonData.topicOpportunities.map((t, idx) => {
+                                const isTargetSelected = fullProject?.WorkingTitle && fullProject.WorkingTitle.trim() === t.topicIdea?.trim();
+                                return (
+                                    <div key={t.id || idx} style={{
+                                        background: isTargetSelected ? 'rgba(52, 211, 153, 0.1)' : 'rgba(0,0,0,0.2)',
+                                        border: isTargetSelected ? '2px solid #34d399' : '1px solid rgba(255,255,255,0.08)',
+                                        borderRadius: '12px', padding: '1.2rem', transition: 'all 0.2s', position: 'relative'
+                                    }}>
+                                        <div style={{ position: 'absolute', top: '-10px', left: '-10px', background: isTargetSelected ? '#34d399' : '#3f3f46', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '0.9rem', color: isTargetSelected ? '#000' : '#fff', border: '2px solid #18181b', zIndex: 2 }}>
+                                            {idx + 1}
                                         </div>
-                                    )}
-                                </div>
-                            ))}
+                                        <h3 style={{ margin: '0 0 0.8rem 0', fontSize: '1.1rem', color: '#f4f4f5' }}>{t.topicIdea}</h3>
+                                        <div style={{ fontSize: '0.85rem', color: '#d4d4d8', marginBottom: '0.8rem', lineHeight: '1.5' }}>
+                                            <b style={{ color: '#a1a1aa' }}>Why It Works:</b> {t.whyItWorks}
+                                        </div>
+                                        <div style={{ fontSize: '0.85rem', color: '#d4d4d8', marginBottom: '1.2rem', lineHeight: '1.5' }}>
+                                            <b style={{ color: '#a1a1aa' }}>Target Audience:</b> {t.targetAudience}
+                                        </div>
+
+                                        {fullProject.ResearchBehavior === 'suggest_topics' && !isTargetSelected && (
+                                            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                                <button
+                                                    onClick={() => handleSelectTopic(t.topicIdea)}
+                                                    style={{
+                                                        background: '#34d399', color: '#000', border: 'none', padding: '0.6rem 1.2rem',
+                                                        borderRadius: '6px', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', transition: '0.2s'
+                                                    }}>
+                                                    Select this Subject
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
                     );
                 }
@@ -2884,7 +2887,7 @@ function YoutubeWorkspace({ project, onBack }) {
                                     {fullProject.SourceType === 'Existing Reference' && (
                                         <>
                                             {fullProject.referenceUrl && <div><div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginBottom: '0.2rem' }}>Reference URL</div><div style={{ color: '#e4e4e7' }}>{fullProject.referenceUrl}</div></div>}
-                                            {fullProject.referenceLearnings && <div><div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginBottom: '0.2rem' }}>Learning Targets</div><div style={{ color: '#e4e4e7' }}>{fullProject.referenceLearnings}</div></div>}
+                                            {fullProject.referenceLearnings && <div><div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginBottom: '0.2rem' }}>Learning Targets</div><div style={{ color: '#e4e4e7' }}>{Array.isArray(fullProject.referenceLearnings) ? fullProject.referenceLearnings.join(', ') : fullProject.referenceLearnings}</div></div>}
                                             {fullProject.referenceNotes && <div><div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginBottom: '0.2rem' }}>Reference Notes</div><div style={{ color: '#e4e4e7' }}>{fullProject.referenceNotes}</div></div>}
                                         </>
                                     )}
