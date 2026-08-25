@@ -79,7 +79,8 @@ if (!process.env.GEMINI_API_KEY) {
 let doc = null;
 
 async function initSheet() {
-  const targetSheetId = process.env.REEL_SHEET_ID || process.env.GOOGLE_SHEET_ID || process.env.YT_SHEET_ID;
+  doc = null;
+  const targetSheetId = process.env.REEL_SHEET_ID || process.env.GOOGLE_SHEET_ID;
   if (!targetSheetId || !process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY) {
     logger.warn("Reel Engine Sheet credentials missing (REEL_SHEET_ID). Skipping DB sync.");
     return;
