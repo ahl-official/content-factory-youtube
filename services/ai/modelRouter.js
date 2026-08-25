@@ -33,14 +33,14 @@ function getRoutingSequence(primaryConfig) {
     if (primaryConfig.provider === 'gemini') {
         sequence = [
             { provider: 'gemini', model: primaryConfig.model },
-            { provider: 'gemini', model: aiModels.gemini.lite },
+            { provider: 'gemini', model: aiModels.gemini.fast },
             { provider: 'openrouter', model: 'openrouter/free' }
         ];
     } else {
         sequence = [
             { provider: 'openrouter', model: primaryConfig.model },
             { provider: 'gemini', model: aiModels.gemini.default },
-            { provider: 'gemini', model: aiModels.gemini.lite }
+            { provider: 'gemini', model: aiModels.gemini.fast }
         ];
     }
 

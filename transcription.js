@@ -38,26 +38,43 @@ async function transcribe(buffer, mimetype) {
     }
   };
 
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
+  const { getModelPool } = require('./services/ai/geminiService');
+  const pool = getModelPool('gemini-transcription');
 
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Gemini Transcription Failed (${res.status}): ${errText}`);
+  let lastErrorText = null;
+
+  for (let i = 0; i < pool.length; i++) {
+    const currentModelId = pool[i];
+    try {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${currentModelId}:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        lastErrorText = await res.text();
+        if (res.status === 404 || res.status === 503) {
+          continue; // Skip out to retry
+        }
+        throw new Error(`Gemini Transcription Failed (${res.status}): ${lastErrorText}`);
+      }
+
+      const data = await res.json();
+      const transcript = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+      logger.info(
+        { ms: Date.now() - t0, len: transcript.length, model: currentModelId },
+        'Gemini transcription done'
+      );
+
+      return { text: transcript.trim(), language: 'auto' };
+    } catch (e) {
+      if (i === pool.length - 1) throw e;
+    }
   }
 
-  const data = await res.json();
-  const transcript = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-
-  logger.info(
-    { ms: Date.now() - t0, len: transcript.length },
-    'Gemini transcription done'
-  );
-
-  return { text: transcript.trim(), language: 'auto' };
+  throw new Error(`Gemini Transcription Failed. Exhausted models. Last err: ${lastErrorText}`);
 }
 
 module.exports = { transcribe };

@@ -261,11 +261,29 @@ async function saveResearch(researchData) {
     const sheet = d.sheetsByTitle[TABS.RESEARCH];
     const rowData = { ...researchData, ResearchID: `RES-${Date.now()}`, CreatedAt: new Date().toISOString(), UpdatedAt: new Date().toISOString() };
     const formattedRow = {};
+    const missingColumns = [];
+
+    // Check missing columns based on headers
+    HEADERS[TABS.RESEARCH].forEach(h => {
+        if (rowData[h] === undefined || rowData[h] === null) {
+            missingColumns.push(h);
+        }
+    });
+
     for (const k of Object.keys(rowData)) {
         if (HEADERS[TABS.RESEARCH].includes(k)) {
             formattedRow[k] = typeof rowData[k] === 'object' ? JSON.stringify(rowData[k]) : String(rowData[k]);
         }
     }
+
+    logger.info({
+        projectId: researchData.ProjectID,
+        agent: '1',
+        sheet: TABS.RESEARCH,
+        missingColumns,
+        outputKeys: Object.keys(researchData)
+    }, '[Persistence Audit] Agent Save Missing Columns Check');
+
     await sheet.addRow(formattedRow);
     return rowData;
 }
@@ -463,6 +481,21 @@ async function upsertAgentArtifact(options) {
             rowData[k] = v;
         }
 
+        const missingColumns = [];
+        currentHeaders.forEach(h => {
+            if (rowData[h] === undefined || rowData[h] === null || rowData[h] === '') {
+                missingColumns.push(h);
+            }
+        });
+
+        logger.info({
+            projectId: projectId,
+            agent: agentId,
+            sheet: sheetName,
+            missingColumns,
+            outputKeys: Object.keys(flatOutput)
+        }, '[Persistence Audit] Dynamic Agent Save Missing Columns Check');
+
         await sheet.addRow(rowData);
         return rowData;
     }
@@ -585,6 +618,45 @@ async function approveAgentRun(projectId, runId, selectedAngleId = null) {
     return false;
 }
 
+async function updateAgentRunFeedback(projectId, agentKey, version, feedbackText) {
+    const d = await getDoc();
+    if (!d) return false;
+    const sheet = d.sheetsByTitle[TABS.AGENT_RUNS];
+    const rows = await sheet.getRows();
+    const run = rows.find(r => r.get('ProjectID') === projectId && r.get('AgentKey') === agentKey && String(r.get('Version')) === String(version));
+    if (run) {
+        run.set('Feedback', feedbackText);
+        run.set('UpdatedAt', new Date().toISOString());
+        await run.save();
+        return true;
+    }
+    return false;
+}
+
+async function approveScriptVersion(projectId, basedOnRunId) {
+    const d = await getDoc();
+    if (!d) return false;
+    const sheet = d.sheetsByTitle[TABS.SCRIPTS];
+    const rows = await sheet.getRows();
+    let changed = false;
+    const nowStr = new Date().toISOString();
+    for (const r of rows) {
+        if (r.get('ProjectID') === projectId) {
+            if (r.get('BasedOnRunID') === basedOnRunId) {
+                r.set('IsApproved', 'true');
+                r.set('ApprovedAt', nowStr);
+                await r.save();
+                changed = true;
+            } else if (String(r.get('IsApproved')).toLowerCase() === 'true') {
+                r.set('IsApproved', 'false');
+                r.set('ApprovedAt', '');
+                await r.save();
+            }
+        }
+    }
+    return changed;
+}
+
 async function submitAgentRunToSir(projectId, runId, selectedAngleId = null) {
     const d = await getDoc();
     if (!d) return false;
@@ -701,5 +773,7 @@ module.exports = {
     updateTopicRegistryTopic,
     getTopicRegistryEntry,
     saveCustomData,
-    upsertAgentArtifact
+    upsertAgentArtifact,
+    updateAgentRunFeedback,
+    approveScriptVersion
 };

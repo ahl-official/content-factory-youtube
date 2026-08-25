@@ -1,7 +1,11 @@
 module.exports = {
     gemini: {
-        default: "gemini-2.5-flash",
-        lite: "gemini-2.5-flash-lite",
-        heavy: "gemini-2.5-flash"
+        default: 'gemini-reasoning',
+        fast: 'gemini-fast',
+        heavy: 'gemini-reasoning',
+        transcription: 'gemini-transcription'
+    },
+    openRouter: {
+        free: 'openrouter/free'
     }
 };

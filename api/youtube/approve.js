@@ -72,12 +72,22 @@ module.exports = async function (req, res) {
             } catch (e) { }
         } else if (agentKey === AGENT_KEYS.ANGLE) {
             await ytDb.updateProject(projectId, { CurrentStage: 'Waiting for Sir Checkpoint / Strategist Prep', CurrentAgent: 3, Progress: '2' });
+            if (selectedAngleId) {
+                try {
+                    let parsedOutput = typeof targetRun.OutputData === 'string' ? JSON.parse(targetRun.OutputData) : targetRun.OutputData;
+                    const selectedAngle = parsedOutput.angles?.find(a => a.id === selectedAngleId);
+                    if (selectedAngle) {
+                        await ytDb.updateTopicRegistryAngle(projectId, JSON.stringify(selectedAngle));
+                    }
+                } catch (e) { }
+            }
         } else if (agentKey === AGENT_KEYS.STRATEGIST) {
             await ytDb.updateProject(projectId, { CurrentStage: 'Structure Architect', CurrentAgent: 4, Progress: '3' });
         } else if (agentKey === AGENT_KEYS.STRUCTURE) {
             await ytDb.updateProject(projectId, { CurrentStage: 'Script Writing', CurrentAgent: 5, Progress: '4' });
         } else if (agentKey === AGENT_KEYS.SCRIPT) {
             await ytDb.updateProject(projectId, { CurrentStage: 'Creative Director', CurrentAgent: 6, Progress: '5' });
+            await ytDb.approveScriptVersion(projectId, targetRun.RunID);
         } else if (agentKey === AGENT_KEYS.CREATIVE_DIRECTOR) {
             await ytDb.updateProject(projectId, { CurrentStage: 'Thumbnail Strategy', Progress: '6', CurrentAgent: 7 });
             await ytDb.upsertAgentArtifact({ sheetName: 'YT_CreativePlan', projectId: projectId, agentId: 6, version: targetRun.Version, status: 'Approved' });

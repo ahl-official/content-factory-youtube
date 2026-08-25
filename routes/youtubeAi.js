@@ -186,6 +186,34 @@ router.post('/projects/:id/agents/research/run', async (req, res) => {
         // Update Project Stage if it was lower
         await ytDb.updateProject(req.params.id, { CurrentStage: 'Research Review', CurrentAgent: 1 });
 
+        // Parse and persist specific columns into YT_Research
+        try {
+            let parsed = typeof output === 'string' ? JSON.parse(output) : output;
+            await ytDb.saveResearch({
+                ProjectID: req.params.id,
+                ResearchVersion: String(version),
+                ResearchMode: 'Agent',
+                CanonicalTopic: parsed.topicSummary || project.WorkingTitle,
+                SourceType: project.SourceType,
+                ResearchStatus: 'Generated',
+                ResearchSummary: typeof parsed.topicSummary === 'string' ? parsed.topicSummary : JSON.stringify(parsed.topicSummary),
+                TopicOpportunities: JSON.stringify(parsed.topicOpportunities),
+                AudienceQuestions: JSON.stringify(parsed.audienceQuestions),
+                YouTubeInsights: JSON.stringify(parsed.youtubeInsights),
+                SearchInsights: JSON.stringify(parsed.searchInsights),
+                CommunityInsights: JSON.stringify(parsed.communityInsights),
+                ContentGaps: JSON.stringify(parsed.contentGaps),
+                Evidence: JSON.stringify(parsed.evidence),
+                ResearchDirections: JSON.stringify(parsed.researchDirections),
+                RecommendedOpportunity: parsed.recommendedResearchOpportunity || parsed.youtubeContentOpportunity,
+                Sources: JSON.stringify(parsed.sources),
+                ProviderStatuses: JSON.stringify(parsed.providerStatuses),
+                Approved: 'False'
+            });
+        } catch (e) {
+            logger.error({ err: e }, "Failed to extract and save parsed YT_Research data");
+        }
+
         res.json({ output, runRecord });
     } catch (err) {
         logger.error({ err }, 'Research run error');
@@ -1040,6 +1068,7 @@ router.post('/projects/:id/agents/:agentKey/feedback', async (req, res) => {
             IsSirFeedback: false
         };
         const fb = await ytDb.saveFeedback(payload);
+        await ytDb.updateAgentRunFeedback(req.params.id, req.params.agentKey, req.body.version, req.body.feedback);
         res.json(fb);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -1063,6 +1092,8 @@ router.post('/projects/:id/sir-review', async (req, res) => {
                 Source: 'Sir',
                 IsSirFeedback: true
             });
+            const dbAgentKey = { 'Angle': 'content_angle', 'Structure': 'structure', 'Script': 'script' }[stage] || stage;
+            await ytDb.updateAgentRunFeedback(req.params.id, dbAgentKey, req.body.version || 1, feedbackText);
             await ytDb.updateProject(req.params.id, { CurrentStage: `Feedback Received - ${stage}` });
         }
 
