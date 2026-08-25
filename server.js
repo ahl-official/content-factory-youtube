@@ -79,7 +79,7 @@ if (!process.env.GEMINI_API_KEY) {
 let doc = null;
 
 async function initSheet() {
-  if (!process.env.GOOGLE_SHEET_ID || !process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY) {
+  if (!process.env.YT_SHEET_ID || !process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY) {
     logger.warn("Google Sheet credentials missing. Skipping DB sync.");
     return;
   }
@@ -89,7 +89,7 @@ async function initSheet() {
       key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
       scopes: ['https://www.googleapis.com/auth/spreadsheets'],
     });
-    doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEET_ID, serviceAccountAuth);
+    doc = new GoogleSpreadsheet(process.env.YT_SHEET_ID, serviceAccountAuth);
     await doc.loadInfo();
     // We will dynamically manage sheets in load/save
     logger.info("Connected to Google Sheets Database");
