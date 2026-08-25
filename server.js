@@ -79,8 +79,9 @@ if (!process.env.GEMINI_API_KEY) {
 let doc = null;
 
 async function initSheet() {
-  if (!process.env.YT_SHEET_ID || !process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY) {
-    logger.warn("Google Sheet credentials missing. Skipping DB sync.");
+  const targetSheetId = process.env.REEL_SHEET_ID || process.env.GOOGLE_SHEET_ID || process.env.YT_SHEET_ID;
+  if (!targetSheetId || !process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY) {
+    logger.warn("Reel Engine Sheet credentials missing (REEL_SHEET_ID). Skipping DB sync.");
     return;
   }
   try {
@@ -89,7 +90,7 @@ async function initSheet() {
       key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
       scopes: ['https://www.googleapis.com/auth/spreadsheets'],
     });
-    doc = new GoogleSpreadsheet(process.env.YT_SHEET_ID, serviceAccountAuth);
+    doc = new GoogleSpreadsheet(targetSheetId, serviceAccountAuth);
     await doc.loadInfo();
     // We will dynamically manage sheets in load/save
     logger.info("Connected to Google Sheets Database");
@@ -100,12 +101,20 @@ async function initSheet() {
 initSheet();
 
 // ─── DB Endpoints ────────────────────────────────────────────────────────────
+let reelDbCache = null;
+let reelDbCacheTime = 0;
+const REEL_CACHE_TTL = 30000; // 30 seconds
+
 app.get('/api/db/load', async (req, res) => {
   if (!doc) return res.json({ topics: [], targetAudiences: [], creatorReferences: [], sirStyleGuide: '', activeCreatorId: null, activeAudienceId: null, hookLibrary: [], videoFormats: [] });
+  if (reelDbCache && (Date.now() - reelDbCacheTime < REEL_CACHE_TTL)) {
+    return res.json(reelDbCache);
+  }
   try {
     await doc.loadInfo();
     const data = {};
     for (const sheet of doc.sheetsByIndex) {
+      if (sheet.title.startsWith('YT_')) continue;
       const rows = await sheet.getRows();
       if (sheet.title === 'Settings') {
         rows.forEach(r => {
@@ -127,6 +136,8 @@ app.get('/api/db/load', async (req, res) => {
         data[sheet.title] = arrayData;
       }
     }
+    reelDbCache = data;
+    reelDbCacheTime = Date.now();
     res.json(data);
   } catch (e) {
     logger.error({ err: e }, "DB load error");
@@ -143,6 +154,7 @@ app.post('/api/db/save', async (req, res) => {
     // Separate arrays (tabs) and primitives (Settings)
     const settings = {};
     for (const [key, value] of Object.entries(payload)) {
+      if (key.startsWith('YT_')) continue;
       if (Array.isArray(value)) {
         let sheet = doc.sheetsByTitle[key];
         // Collect all possible keys from all objects in the array to form headers
@@ -153,7 +165,14 @@ app.post('/api/db/save', async (req, res) => {
         if (headers.length === 0) headers.push('ID'); // fallback for empty array
 
         if (!sheet) {
-          sheet = await doc.addSheet({ title: key, headerValues: headers });
+          try {
+            sheet = await doc.addSheet({ title: key, headerValues: headers });
+          } catch (e) {
+            if (e.message && e.message.includes('already exists')) {
+              await doc.loadInfo();
+              sheet = doc.sheetsByTitle[key];
+            } else throw e;
+          }
         } else {
           // ensure headers are up to date
           await sheet.resize({ rowCount: sheet.rowCount || 1, columnCount: Math.max(headers.length, sheet.columnCount || 1) });
@@ -178,7 +197,14 @@ app.post('/api/db/save', async (req, res) => {
     if (Object.keys(settings).length > 0) {
       let sheet = doc.sheetsByTitle['Settings'];
       if (!sheet) {
-        sheet = await doc.addSheet({ title: 'Settings', headerValues: ['Key', 'Value'] });
+        try {
+          sheet = await doc.addSheet({ title: 'Settings', headerValues: ['Key', 'Value'] });
+        } catch (e) {
+          if (e.message && e.message.includes('already exists')) {
+            await doc.loadInfo();
+            sheet = doc.sheetsByTitle['Settings'];
+          } else throw e;
+        }
       } else {
         await sheet.setHeaderRow(['Key', 'Value']);
       }
@@ -189,6 +215,7 @@ app.post('/api/db/save', async (req, res) => {
       await sheet.addRows(rowsToAdd);
     }
 
+    reelDbCache = null;
     res.json({ success: true });
   } catch (e) {
     logger.error({ err: e }, "DB save error");

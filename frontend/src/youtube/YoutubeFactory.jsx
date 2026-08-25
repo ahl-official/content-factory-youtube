@@ -945,7 +945,7 @@ function YoutubeWorkspace({ project, onBack }) {
     const [selectedAngleId, setSelectedAngleId] = useState(null);
     const [isSubmittingForSir, setIsSubmittingForSir] = useState(false);
 
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+    const API_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api');
 
     const AGENT_KEY_MAP = {
         1: 'research', 2: 'content_angle', 3: 'strategist', 4: 'structure', 5: 'script',
@@ -2974,7 +2974,7 @@ function YoutubeSettings() {
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ color: 'var(--text-muted)' }}>Current Model</span>
-                            <span style={{ color: '#a855f7', fontWeight: 500 }}>{aiConfig.model || 'gemini-1.5-flash'}</span>
+                            <span style={{ color: '#a855f7', fontWeight: 500 }}>{aiConfig.model || 'gemini-2.5-flash'}</span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ color: 'var(--text-muted)' }}>Fallback Status</span>

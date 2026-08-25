@@ -1,7 +1,7 @@
 module.exports = {
     gemini: {
-        default: "gemini-1.5-flash",
-        lite: "gemini-1.5-flash-8b",
-        heavy: "gemini-1.5-pro"
+        default: "gemini-2.5-flash",
+        lite: "gemini-2.5-flash-lite",
+        heavy: "gemini-2.5-flash"
     }
 };
