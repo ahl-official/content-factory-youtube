@@ -1160,7 +1160,17 @@ function YoutubeWorkspace({ project, onBack }) {
                 body: JSON.stringify({ projectId: fullProject.ProjectID, currentAgent: activeAgentId, payload })
             });
 
-            const data = await r.json();
+            const textResponse = await r.text();
+            let data;
+            try {
+                data = JSON.parse(textResponse);
+            } catch (e) {
+                if (textResponse.includes("An error occurred") || textResponse.includes("SERVER_ERROR") || textResponse.includes("504") || !r.ok) {
+                    throw new Error("Vercel Timeout Reached: The agent is still safely running in the background! Please wait 20 seconds and click 'Refresh' to see your new version.");
+                }
+                throw new Error("Invalid response format from server.");
+            }
+
             if (!r.ok || data.status === 'failed') throw new Error(data.error || 'Agent execution failed');
 
             setFeedbackText('');
