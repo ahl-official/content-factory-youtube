@@ -157,13 +157,14 @@ app.post('/api/db/save', async (req, res) => {
     for (const [key, value] of Object.entries(payload)) {
       if (key.startsWith('YT_')) continue;
       if (Array.isArray(value)) {
+        // Anti-Wipe Protection: If the frontend accidentally sends an empty array, do NOT clear the sheet and do NOT apply the 'ID' fallback. Ignore it completely.
+        if (value.length === 0) continue;
+
         let sheet = doc.sheetsByTitle[key];
         // Collect all possible keys from all objects in the array to form headers
         const headersSet = new Set();
         value.forEach(item => Object.keys(item).forEach(k => headersSet.add(k)));
         const headers = Array.from(headersSet);
-
-        if (headers.length === 0) headers.push('ID'); // fallback for empty array
 
         if (!sheet) {
           try {
