@@ -1154,32 +1154,74 @@ function YoutubeWorkspace({ project, onBack }) {
                 }).catch(console.error);
             }
 
-            // Directly call the new Vercel API endpoint
-            const r = await fetch(`${API_URL}/youtube/generate`, {
+            // Immediately trigger generation WITHOUT blocking the frontend for Vercel's 10s limit
+            const fetchPromise = fetch(`${API_URL}/youtube/generate`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ projectId: fullProject.ProjectID, currentAgent: activeAgentId, payload })
             });
 
-            const textResponse = await r.text();
+            // Artificial 5-second intercept to gracefully shift UI into polling mode
+            const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve('RACE_TIMEOUT'), 5000));
+            const raceResult = await Promise.race([fetchPromise, timeoutPromise]);
+
+            if (raceResult === 'RACE_TIMEOUT') {
+                // Agent is now processing in the AWS Lambda background!
+                setJobStatusMsg('Agent is working in the background. Please wait...');
+                const originalLength = currentAgentRuns.length;
+                let hitCount = 0;
+
+                const pollInterval = setInterval(async () => {
+                    hitCount++;
+                    if (hitCount > 15) { // 60 seconds hard stop (15 * 4s)
+                        clearInterval(pollInterval);
+                        setIsGenerating(false);
+                        setJobStatusMsg('');
+                        fetchWorkspaceData(true);
+                        return;
+                    }
+                    try {
+                        const rRes = await fetch(`${API_URL}/yt/projects/${fullProject.ProjectID}/agent-runs`);
+                        if (!rRes.ok) return;
+                        const rData = await rRes.json();
+                        if (Array.isArray(rData)) {
+                            const newRuns = rData.filter(r => r.AgentKey === activeAgentKey);
+                            if (newRuns.length > originalLength) {
+                                // Agent completely successfully generated inside Vercel background!
+                                clearInterval(pollInterval);
+                                setRuns(rData);
+                                setFeedbackText('');
+                                setShowFeedback(false);
+                                setJobStatusMsg('');
+                                setIsGenerating(false);
+                                fetchWorkspaceData(true);
+                            }
+                        }
+                    } catch (e) {
+                        // ignore network stutter during background silent polls
+                    }
+                }, 4000);
+                return; // halt and rely entirely on the polling cycle for UI state!
+            }
+
+            // If we completed under 5 seconds (e.g. grabbed from db cache)
+            const textResponse = await raceResult.text();
             let data;
             try {
                 data = JSON.parse(textResponse);
             } catch (e) {
-                if (textResponse.includes("An error occurred") || textResponse.includes("SERVER_ERROR") || textResponse.includes("504") || !r.ok) {
-                    throw new Error("Vercel Timeout Reached: The agent is still safely running in the background! Please wait 20 seconds and click 'Refresh' to see your new version.");
-                }
+                // Native timeout / invalid dump
                 throw new Error("Invalid response format from server.");
             }
 
-            if (!r.ok || data.status === 'failed') throw new Error(data.error || 'Agent execution failed');
+            if (!raceResult.ok || data.status === 'failed') throw new Error(data.error || 'Agent execution failed');
 
             setFeedbackText('');
             setShowFeedback(false);
             setJobStatusMsg('');
             fetchWorkspaceData(true);
+            setIsGenerating(false);
         } catch (e) {
             setErrorMsg(e.message);
-        } finally {
             setIsGenerating(false);
             setJobStatusMsg('');
         }
