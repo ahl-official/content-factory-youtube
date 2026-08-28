@@ -2900,7 +2900,7 @@ function YoutubeWorkspace({ project, onBack }) {
                                 <div style={{ marginBottom: '1rem', textAlign: 'center' }}>
                                     <label className="yt-btn-secondary" style={{ display: 'inline-flex', cursor: isTranscribing ? 'not-allowed' : 'pointer', fontSize: '0.75rem', padding: '0.4rem 0.8rem' }}>
                                         {isTranscribing ? 'Transcribing...' : '🎤 Add Voice Note'}
-                                        <input type="file" accept="audio/*,video/*" style={{ display: 'none' }} onChange={handleVoiceUpload} disabled={isTranscribing} />
+                                        <input type="file" accept="audio/*,video/*,.ogg,.opus,.m4a" style={{ display: 'none' }} onChange={handleVoiceUpload} disabled={isTranscribing} />
                                     </label>
                                 </div>
 
