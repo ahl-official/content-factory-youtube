@@ -23,7 +23,7 @@ async function transcribe(buffer, mimetype) {
     contents: [
       {
         parts: [
-          { text: "Please carefully transcribe this audio. Do not summarize. Just provide the exact text of what is said. Support Hindi and English natively." },
+          { text: "Please carefully transcribe this audio. If the audio is in Marathi or Hindi, automatically translate and transcribe it entirely into perfect English. Do not summarize, just provide the exact English translation of everything that is said." },
           {
             inlineData: {
               mimeType: safeMime,
