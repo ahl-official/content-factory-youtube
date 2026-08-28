@@ -1,0 +1,23 @@
+name: Auto-Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'frontend/**' # Prevent the backend from rebooting when you only edit React files
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          script: |
+            cd /var/www/content-factory-youtube
+            git pull origin main
+            docker compose up -d --build
