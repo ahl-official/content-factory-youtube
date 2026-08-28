@@ -1,0 +1,10 @@
+function BoardView({ topics, setTopics, onOpen, onNew, updateTopic, setError }) {
+function IdeasView({ ideas, isGenerating, onGenerate, onSelect, customTopic, setCustomTopic, targetAudiences, setIdeas }) {
+function StyleGuideView({ guide, onUpdate }) {
+function CreatorPlaybookView({ creatorReferences, setCreatorReferences, activeCreatorId, setActiveCreatorId }) {
+function TargetAudienceView({ targetAudiences, setTargetAudiences, activeAudienceId, setActiveAudienceId }) {
+function BrandVoicesView({ brandVoices, setBrandVoices, activeBrandVoiceId, setActiveBrandVoiceId }) {
+function HookLibraryView({ hookLibrary, setHookLibrary }) {
+function ThumbnailStylesView({ thumbnailStyles, setThumbnailStyles, activeThumbnailStyleId, setActiveThumbnailStyleId }) {
+function EditingStylesView({ editingStyles, setEditingStyles, activeEditingStyleId, setActiveEditingStyleId }) {
+function VideoFormatsView({ videoFormats, setVideoFormats }) {

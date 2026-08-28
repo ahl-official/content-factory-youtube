@@ -353,7 +353,16 @@ function App() {
           {view === 'topic' && currentTopic && <TopicDetail topic={currentTopic} updateTopic={updateTopic} onBack={() => setView('board')} setError={setError} sirStyleGuide={sirStyleGuide} learnFromFeedback={learnFromFeedback} creatorReferences={creatorReferences} targetAudiences={targetAudiences} brandVoices={brandVoices} thumbnailStyles={thumbnailStyles} editingStyles={editingStyles} hookLibrary={hookLibrary} videoFormats={videoFormats} activeCreatorId={activeCreatorId} activeAudienceId={activeAudienceId} />}
         </>
       ) : (
-        <YoutubeFactory />
+        <YoutubeFactory
+          sirStyleGuide={sirStyleGuide} setSirStyleGuide={setSirStyleGuide}
+          creatorReferences={creatorReferences} setCreatorReferences={setCreatorReferences} activeCreatorId={activeCreatorId} setActiveCreatorId={setActiveCreatorId}
+          targetAudiences={targetAudiences} setTargetAudiences={setTargetAudiences} activeAudienceId={activeAudienceId} setActiveAudienceId={setActiveAudienceId}
+          brandVoices={brandVoices} setBrandVoices={setBrandVoices} activeBrandVoiceId={activeBrandVoiceId} setActiveBrandVoiceId={setActiveBrandVoiceId}
+          thumbnailStyles={thumbnailStyles} setThumbnailStyles={setThumbnailStyles} activeThumbnailStyleId={activeThumbnailStyleId} setActiveThumbnailStyleId={setActiveThumbnailStyleId}
+          editingStyles={editingStyles} setEditingStyles={setEditingStyles} activeEditingStyleId={activeEditingStyleId} setActiveEditingStyleId={setActiveEditingStyleId}
+          videoFormats={videoFormats} setVideoFormats={setVideoFormats}
+          hookLibrary={hookLibrary} setHookLibrary={setHookLibrary}
+        />
       )}
     </div>
   );
@@ -1631,7 +1640,7 @@ function TopicDetail({ topic, updateTopic, onBack, setError, sirStyleGuide, lear
 /* ═══════════════════════════════════════════════
    STYLE GUIDE VIEW
 ═══════════════════════════════════════════════ */
-function StyleGuideView({ guide, onUpdate }) {
+export function StyleGuideView({ guide, onUpdate }) {
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState(guide);
 
@@ -1719,7 +1728,7 @@ function StyleGuideView({ guide, onUpdate }) {
 /* ═══════════════════════════════════════════════
    CREATOR PLAYBOOK VIEW
 ═══════════════════════════════════════════════ */
-function CreatorPlaybookView({ creatorReferences, setCreatorReferences, activeCreatorId, setActiveCreatorId }) {
+export function CreatorPlaybookView({ creatorReferences, setCreatorReferences, activeCreatorId, setActiveCreatorId }) {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [newCreatorName, setNewCreatorName] = useState('');
@@ -1846,7 +1855,7 @@ function CreatorPlaybookView({ creatorReferences, setCreatorReferences, activeCr
 /* ═══════════════════════════════════════════════
    TARGET AUDIENCE VIEW
 ═══════════════════════════════════════════════ */
-function TargetAudienceView({ targetAudiences, setTargetAudiences, activeAudienceId, setActiveAudienceId }) {
+export function TargetAudienceView({ targetAudiences, setTargetAudiences, activeAudienceId, setActiveAudienceId }) {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [newName, setNewName] = useState('');
@@ -1973,7 +1982,7 @@ function TargetAudienceView({ targetAudiences, setTargetAudiences, activeAudienc
 /* ═══════════════════════════════════════════════
    BRAND VOICES VIEW
 ═══════════════════════════════════════════════ */
-function BrandVoicesView({ brandVoices, setBrandVoices, activeBrandVoiceId, setActiveBrandVoiceId }) {
+export function BrandVoicesView({ brandVoices, setBrandVoices, activeBrandVoiceId, setActiveBrandVoiceId }) {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [newName, setNewName] = useState('');
@@ -2118,7 +2127,7 @@ function BrandVoicesView({ brandVoices, setBrandVoices, activeBrandVoiceId, setA
 /* ═══════════════════════════════════════════════
    HOOK LIBRARY VIEW
 ═══════════════════════════════════════════════ */
-function HookLibraryView({ hookLibrary, setHookLibrary }) {
+export function HookLibraryView({ hookLibrary, setHookLibrary }) {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [newType, setNewType] = useState('Visual');
@@ -2246,7 +2255,7 @@ function HookLibraryView({ hookLibrary, setHookLibrary }) {
 /* ═══════════════════════════════════════════════
    THUMBNAIL STYLES VIEW
 ═══════════════════════════════════════════════ */
-function ThumbnailStylesView({ thumbnailStyles, setThumbnailStyles, activeThumbnailStyleId, setActiveThumbnailStyleId }) {
+export function ThumbnailStylesView({ thumbnailStyles, setThumbnailStyles, activeThumbnailStyleId, setActiveThumbnailStyleId }) {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [newName, setNewName] = useState('');
@@ -2373,7 +2382,7 @@ function ThumbnailStylesView({ thumbnailStyles, setThumbnailStyles, activeThumbn
 /* ═══════════════════════════════════════════════
    EDITING STYLES VIEW
 ═══════════════════════════════════════════════ */
-function EditingStylesView({ editingStyles, setEditingStyles, activeEditingStyleId, setActiveEditingStyleId }) {
+export function EditingStylesView({ editingStyles, setEditingStyles, activeEditingStyleId, setActiveEditingStyleId }) {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [newName, setNewName] = useState('');
@@ -2500,7 +2509,7 @@ function EditingStylesView({ editingStyles, setEditingStyles, activeEditingStyle
 /* ═══════════════════════════════════════════════
    VIDEO FORMATS VIEW
 ═══════════════════════════════════════════════ */
-function VideoFormatsView({ videoFormats, setVideoFormats }) {
+export function VideoFormatsView({ videoFormats, setVideoFormats }) {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [newName, setNewName] = useState('');

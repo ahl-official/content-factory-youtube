@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, Component } from 'react';
+import { StyleGuideView, CreatorPlaybookView, TargetAudienceView, BrandVoicesView, ThumbnailStylesView, EditingStylesView, VideoFormatsView, HookLibraryView } from '../App';
 
 // 15 Standard YouTube Agents
 const YT_AGENTS = [
@@ -106,7 +107,16 @@ function CustomSelect({ value, options, onChange, style }) {
 
 const API_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api');
 
-export default function YoutubeFactory() {
+export default function YoutubeFactory({
+    sirStyleGuide, setSirStyleGuide,
+    creatorReferences, setCreatorReferences, activeCreatorId, setActiveCreatorId,
+    targetAudiences, setTargetAudiences, activeAudienceId, setActiveAudienceId,
+    brandVoices, setBrandVoices, activeBrandVoiceId, setActiveBrandVoiceId,
+    thumbnailStyles, setThumbnailStyles, activeThumbnailStyleId, setActiveThumbnailStyleId,
+    editingStyles, setEditingStyles, activeEditingStyleId, setActiveEditingStyleId,
+    videoFormats, setVideoFormats,
+    hookLibrary, setHookLibrary
+}) {
     const [view, setView] = useState('dashboard');
     const [projects, setProjects] = useState([]);
     const [activeProjectId, setActiveProjectId] = useState(null);
@@ -249,16 +259,36 @@ export default function YoutubeFactory() {
         <div className={view === 'workspace' ? 'yt-viewport-lock' : ''} style={view !== 'workspace' ? { display: 'flex', flexDirection: 'column', height: '100%', marginTop: '0.5rem' } : {}}>
 
             {view !== 'workspace' && (
-                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexShrink: 0, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '1rem', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexShrink: 0, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
                     <h2 style={{ margin: '0 1rem 0 0', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.2rem' }}>📺 YouTube Engine</h2>
                     <button className={view === 'dashboard' ? 'yt-btn-primary' : 'yt-btn-secondary'} onClick={() => setView('dashboard')}>Projects Dashboard</button>
                     <button className={view === 'new_project' ? 'yt-btn-primary' : 'yt-btn-secondary'} onClick={() => setView('new_project')}>+ New YouTube Video</button>
-                    <button className={view === 'settings' ? 'yt-btn-primary' : 'yt-btn-secondary'} onClick={() => setView('settings')}>+ My Settings</button>
+                    <button className={view === 'settings' ? 'yt-btn-primary' : 'yt-btn-secondary'} onClick={() => setView('settings')}>Auto-Learning Memory</button>
+
+                    <div style={{ width: '100%', height: '10px' }}></div>
+
+                    <button className={`btn ${view === 'guide' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('guide')}>🧠 Sir's Style Guide {sirStyleGuide ? '●' : ''}</button>
+                    <button className={`btn ${view === 'creators' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('creators')}>🎬 Creator Playbook {activeCreatorId ? '●' : ''}</button>
+                    <button className={`btn ${view === 'audiences' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('audiences')}>🎯 Target Audience {activeAudienceId ? '●' : ''}</button>
+                    <button className={`btn ${view === 'brands' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('brands')}>👑 Brand Voices {activeBrandVoiceId ? '●' : ''}</button>
+                    <button className={`btn ${view === 'thumbnails' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('thumbnails')}>🖼️ Thumbnail Styles {activeThumbnailStyleId ? '●' : ''}</button>
+                    <button className={`btn ${view === 'editing' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('editing')}>✂️ Editing Styles {activeEditingStyleId ? '●' : ''}</button>
+                    <button className={`btn ${view === 'formats' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('formats')}>🎬 Video Formats</button>
+                    <button className={`btn ${view === 'hooks' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('hooks')}>🪝 Hook Library</button>
+
                 </div>
             )}
 
             {view === 'dashboard' && <YoutubeDashboard projects={projects} onOpen={(id) => { setActiveProjectId(id); setView('workspace'); }} />}
             {view === 'settings' && <YoutubeSettings />}
+            {view === 'guide' && <StyleGuideView guide={sirStyleGuide} onUpdate={setSirStyleGuide} />}
+            {view === 'creators' && <CreatorPlaybookView creatorReferences={creatorReferences} setCreatorReferences={setCreatorReferences} activeCreatorId={activeCreatorId} setActiveCreatorId={setActiveCreatorId} />}
+            {view === 'audiences' && <TargetAudienceView targetAudiences={targetAudiences} setTargetAudiences={setTargetAudiences} activeAudienceId={activeAudienceId} setActiveAudienceId={setActiveAudienceId} />}
+            {view === 'brands' && <BrandVoicesView brandVoices={brandVoices} setBrandVoices={setBrandVoices} activeBrandVoiceId={activeBrandVoiceId} setActiveBrandVoiceId={setActiveBrandVoiceId} />}
+            {view === 'thumbnails' && <ThumbnailStylesView thumbnailStyles={thumbnailStyles} setThumbnailStyles={setThumbnailStyles} activeThumbnailStyleId={activeThumbnailStyleId} setActiveThumbnailStyleId={setActiveThumbnailStyleId} />}
+            {view === 'editing' && <EditingStylesView editingStyles={editingStyles} setEditingStyles={setEditingStyles} activeEditingStyleId={activeEditingStyleId} setActiveEditingStyleId={setActiveEditingStyleId} />}
+            {view === 'formats' && <VideoFormatsView videoFormats={videoFormats} setVideoFormats={setVideoFormats} />}
+            {view === 'hooks' && <HookLibraryView hookLibrary={hookLibrary} setHookLibrary={setHookLibrary} />}
             {view === 'new_project' && <YoutubeNewProject onCreate={async (p) => {
                 try {
                     const payload = {
