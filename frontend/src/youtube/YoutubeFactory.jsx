@@ -1172,7 +1172,7 @@ function YoutubeWorkspace({ project, onBack }) {
 
                 const pollInterval = setInterval(async () => {
                     hitCount++;
-                    if (hitCount > 15) { // 60 seconds hard stop (15 * 4s)
+                    if (hitCount > 90) { // 6 minutes hard stop (90 * 4s) to allow massive Script Generations
                         clearInterval(pollInterval);
                         setIsGenerating(false);
                         setJobStatusMsg('');
