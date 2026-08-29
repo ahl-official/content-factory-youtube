@@ -417,7 +417,7 @@ export default function YoutubeFactory() {
             }} />}
             {view === 'workspace' && currentProject && (
                 <WorkspaceErrorBoundary projectId={currentProject.projectId} onBack={() => { setView('dashboard'); setActiveProjectId(null); }}>
-                    <YoutubeWorkspace project={currentProject} onBack={() => { setView('dashboard'); setActiveProjectId(null); }} />
+                    <YoutubeWorkspace project={currentProject} onBack={() => { setView('dashboard'); setActiveProjectId(null); }} learnFromFeedback={learnFromFeedback} />
                 </WorkspaceErrorBoundary>
             )}
         </div>
@@ -1030,7 +1030,7 @@ function YoutubeNewProject({ onCreate }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // PROJECT WORKSPACE - FIXED HEIGHT APPLICATION LAYOUT
 // ─────────────────────────────────────────────────────────────────────────────
-function YoutubeWorkspace({ project, onBack }) {
+function YoutubeWorkspace({ project, onBack, learnFromFeedback }) {
     const [fullProject, setFullProject] = useState(null);
     const [activeAgentId, setActiveAgentId] = useState(project.currentAgent || 1);
     const [showFeedback, setShowFeedback] = useState(false);
