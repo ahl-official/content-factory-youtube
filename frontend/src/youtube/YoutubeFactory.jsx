@@ -107,20 +107,93 @@ function CustomSelect({ value, options, onChange, style }) {
 
 const API_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api');
 
-export default function YoutubeFactory({
-    learnFromFeedback,
-    sirStyleGuide, setSirStyleGuide,
-    creatorReferences, setCreatorReferences, activeCreatorId, setActiveCreatorId,
-    targetAudiences, setTargetAudiences, activeAudienceId, setActiveAudienceId,
-    brandVoices, setBrandVoices, activeBrandVoiceId, setActiveBrandVoiceId,
-    thumbnailStyles, setThumbnailStyles, activeThumbnailStyleId, setActiveThumbnailStyleId,
-    editingStyles, setEditingStyles, activeEditingStyleId, setActiveEditingStyleId,
-    videoFormats, setVideoFormats,
-    hookLibrary, setHookLibrary
-}) {
+export default function YoutubeFactory() {
     const [view, setView] = useState('dashboard');
     const [projects, setProjects] = useState([]);
     const [activeProjectId, setActiveProjectId] = useState(null);
+
+    // YT Isolated Manual Configurations & Autonomous Learnings
+    const [sirStyleGuide, setSirStyleGuide] = useState('');
+    const [creatorReferences, setCreatorReferences] = useState([]);
+    const [activeCreatorId, setActiveCreatorId] = useState(null);
+    const [targetAudiences, setTargetAudiences] = useState([]);
+    const [activeAudienceId, setActiveAudienceId] = useState(null);
+    const [brandVoices, setBrandVoices] = useState([]);
+    const [activeBrandVoiceId, setActiveBrandVoiceId] = useState(null);
+    const [thumbnailStyles, setThumbnailStyles] = useState([]);
+    const [activeThumbnailStyleId, setActiveThumbnailStyleId] = useState(null);
+    const [editingStyles, setEditingStyles] = useState([]);
+    const [activeEditingStyleId, setActiveEditingStyleId] = useState(null);
+    const [videoFormats, setVideoFormats] = useState([]);
+    const [hookLibrary, setHookLibrary] = useState([]);
+
+    const [isLoadingDB, setIsLoadingDB] = useState(true);
+    const [dbLoadSuccess, setDbLoadSuccess] = useState(false);
+    const [dbError, setDbError] = useState(null);
+
+    // Load Youtube DB Settings
+    useEffect(() => {
+        fetch(`${API_URL}/yt/db/load`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.sirStyleGuide) setSirStyleGuide(data.sirStyleGuide);
+                if (data.creatorReferences) setCreatorReferences(data.creatorReferences);
+                if (data.targetAudiences) setTargetAudiences(data.targetAudiences);
+                if (data.brandVoices) setBrandVoices(data.brandVoices);
+                if (data.thumbnailStyles) setThumbnailStyles(data.thumbnailStyles);
+                if (data.editingStyles) setEditingStyles(data.editingStyles);
+                if (data.videoFormats) setVideoFormats(data.videoFormats);
+                if (data.hookLibrary) setHookLibrary(data.hookLibrary);
+
+                if (data.activeCreatorId !== undefined) setActiveCreatorId(data.activeCreatorId || 1);
+                if (data.activeAudienceId !== undefined) setActiveAudienceId(data.activeAudienceId || 1);
+                if (data.activeBrandVoiceId !== undefined) setActiveBrandVoiceId(data.activeBrandVoiceId || 1);
+                if (data.activeThumbnailStyleId !== undefined) setActiveThumbnailStyleId(data.activeThumbnailStyleId || 1);
+                if (data.activeEditingStyleId !== undefined) setActiveEditingStyleId(data.activeEditingStyleId || 1);
+
+                setDbLoadSuccess(true);
+            })
+            .catch(e => {
+                console.error("YT DB Load Error:", e);
+                setDbError("Failed to connect to YouTube Google Sheets Database.");
+            })
+            .finally(() => setIsLoadingDB(false));
+    }, []);
+
+    // Save Youtube DB Sync
+    useEffect(() => {
+        if (isLoadingDB || !dbLoadSuccess) return;
+        const payload = {
+            sirStyleGuide, creatorReferences, targetAudiences, hookLibrary, brandVoices,
+            thumbnailStyles, editingStyles, videoFormats,
+            activeCreatorId: activeCreatorId || '',
+            activeAudienceId: activeAudienceId || '',
+            activeBrandVoiceId: activeBrandVoiceId || '',
+            activeThumbnailStyleId: activeThumbnailStyleId || '',
+            activeEditingStyleId: activeEditingStyleId || ''
+        };
+        fetch(`${API_URL}/yt/db/save`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).catch(e => console.error("YT DB Sync Error:", e));
+    }, [sirStyleGuide, creatorReferences, targetAudiences, hookLibrary, brandVoices, thumbnailStyles, editingStyles, videoFormats, activeCreatorId, activeAudienceId, activeBrandVoiceId, activeThumbnailStyleId, activeEditingStyleId, isLoadingDB]);
+
+    // Autonomous Learn From Feedback explicitly for YouTube Engine
+    const learnFromFeedback = async ({ sirFeedback, scriptBefore, topic }) => {
+        if (!sirFeedback?.trim()) return;
+        try {
+            const res = await fetch(`${API_URL}/learn`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ currentStyleGuide: sirStyleGuide, sirFeedback, scriptBefore, topic }),
+            });
+            if (!res.ok) return;
+            const data = await res.json();
+            if (data.isNewRule && data.updatedGuide) {
+                setSirStyleGuide(data.updatedGuide);
+            }
+        } catch { /* silent */ }
+    };
 
     const fetchProjects = () => {
         fetch(`${API_URL}/yt/projects`)

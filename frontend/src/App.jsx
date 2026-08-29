@@ -353,16 +353,7 @@ function App() {
           {view === 'topic' && currentTopic && <TopicDetail topic={currentTopic} updateTopic={updateTopic} onBack={() => setView('board')} setError={setError} sirStyleGuide={sirStyleGuide} learnFromFeedback={learnFromFeedback} creatorReferences={creatorReferences} targetAudiences={targetAudiences} brandVoices={brandVoices} thumbnailStyles={thumbnailStyles} editingStyles={editingStyles} hookLibrary={hookLibrary} videoFormats={videoFormats} activeCreatorId={activeCreatorId} activeAudienceId={activeAudienceId} />}
         </>
       ) : (
-        <YoutubeFactory
-          sirStyleGuide={sirStyleGuide} setSirStyleGuide={setSirStyleGuide}
-          creatorReferences={creatorReferences} setCreatorReferences={setCreatorReferences} activeCreatorId={activeCreatorId} setActiveCreatorId={setActiveCreatorId}
-          targetAudiences={targetAudiences} setTargetAudiences={setTargetAudiences} activeAudienceId={activeAudienceId} setActiveAudienceId={setActiveAudienceId}
-          brandVoices={brandVoices} setBrandVoices={setBrandVoices} activeBrandVoiceId={activeBrandVoiceId} setActiveBrandVoiceId={setActiveBrandVoiceId}
-          thumbnailStyles={thumbnailStyles} setThumbnailStyles={setThumbnailStyles} activeThumbnailStyleId={activeThumbnailStyleId} setActiveThumbnailStyleId={setActiveThumbnailStyleId}
-          editingStyles={editingStyles} setEditingStyles={setEditingStyles} activeEditingStyleId={activeEditingStyleId} setActiveEditingStyleId={setActiveEditingStyleId}
-          videoFormats={videoFormats} setVideoFormats={setVideoFormats}
-          hookLibrary={hookLibrary} setHookLibrary={setHookLibrary}
-        />
+        <YoutubeFactory />
       )}
     </div>
   );

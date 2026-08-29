@@ -14,6 +14,29 @@ ytDb.initializeYoutubeSheets()
     })
     .catch(e => logger.error({ err: e }, 'YouTube database initialization error.'));
 
+// YouTube UI Memory State (Bifurcated from Reels)
+router.get('/db/load', async (req, res) => {
+    try {
+        const settings = await ytDb.getSettings();
+        const data = {};
+        for (const [k, v] of Object.entries(settings)) {
+            try { data[k] = JSON.parse(v); } catch (e) { data[k] = v; }
+        }
+        res.json(data);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.post('/db/save', async (req, res) => {
+    try {
+        const payload = req.body;
+        for (let [key, val] of Object.entries(payload)) {
+            const stringVal = typeof val === 'object' ? JSON.stringify(val) : String(val);
+            await ytDb.updateSetting(key, stringVal);
+        }
+        res.json({ success: true });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 // Projects
 router.get('/projects', async (req, res) => {
     try {
