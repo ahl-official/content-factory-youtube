@@ -1539,6 +1539,19 @@ function YoutubeWorkspace({ project, onBack }) {
                 body: JSON.stringify({ stage: activeAgentKey, feedbackText: sirFeedbackText, isApproved: isApproval, version: latestRun?.Version })
             });
             if (!res.ok) throw new Error('Sir review update failed');
+
+            // ── TRIGGER AUTONOMOUS LEARNING ──
+            if (!isApproval && sirFeedbackText?.trim()) {
+                if (typeof learnFromFeedback === 'function') {
+                    // Send it to the autonomous system without blocking
+                    learnFromFeedback({
+                        sirFeedback: sirFeedbackText,
+                        scriptBefore: typeof latestRun?.OutputData === 'string' ? latestRun.OutputData : JSON.stringify(latestRun?.OutputData || {}),
+                        topic: fullProject.WorkingTitle || ''
+                    });
+                }
+            }
+
             setSirFeedbackText('');
 
             const updatedProject = await fetchWorkspaceData();
