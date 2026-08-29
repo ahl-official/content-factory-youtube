@@ -1653,6 +1653,95 @@ function YoutubeWorkspace({ project, onBack, learnFromFeedback }) {
         }
     };
 
+    const handleDownloadScriptPDF = () => {
+        try {
+            if (!latestRun || !latestRun.OutputData) return;
+            const data = typeof latestRun.OutputData === 'string' ? JSON.parse(latestRun.OutputData) : latestRun.OutputData;
+
+            let html = `
+                <html>
+                <head>
+                    <title>${data.scriptTitle || fullProject?.WorkingTitle || 'YouTube Script'}</title>
+                    <style>
+                        body { font-family: 'Georgia', serif; line-height: 1.8; color: #111; max-width: 800px; margin: 0 auto; padding: 40px; }
+                        h1 { font-family: 'Helvetica', sans-serif; font-size: 24pt; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 30px; text-align: center; }
+                        h2 { font-family: 'Helvetica', sans-serif; font-size: 16pt; margin-top: 30px; margin-bottom: 15px; color: #333; text-transform: uppercase; letter-spacing: 1px; }
+                        p { font-size: 12pt; margin-bottom: 20px; text-align: justify; }
+                        .section { margin-bottom: 40px; }
+                        .bullet-list { margin: 10px 0 20px 20px; }
+                        .bullet-list li { margin-bottom: 8px; font-size: 12pt; }
+                    </style>
+                </head>
+                <body>
+                    <h1>${data.scriptTitle || fullProject?.WorkingTitle || 'YouTube Script'}</h1>
+                    
+                    <div class="section">
+                        <h2>Opening / Hook</h2>
+                        <p>${(data.opening || '').replace(/\n/g, '<br/>')}</p>
+                    </div>
+            `;
+
+            if (data.chapters && Array.isArray(data.chapters)) {
+                data.chapters.forEach((ch, i) => {
+                    html += `
+                    <div class="section">
+                        <h2>Chapter ${i + 1}: ${ch.chapterTitle || ''}</h2>
+                        <p>${(ch.scriptText || '').replace(/\n/g, '<br/>')}</p>
+                    </div>`;
+                });
+            }
+
+            if (data.rehooks && data.rehooks.length > 0) {
+                html += `
+                    <div class="section">
+                        <h2>Planned Rehooks & Transitions</h2>
+                        <ul class="bullet-list">
+                            ${data.rehooks.map(r => `<li>${r}</li>`).join('')}
+                        </ul>
+                    </div>`;
+            }
+
+            if (data.cta) {
+                html += `
+                    <div class="section">
+                        <h2>Call To Action (CTA)</h2>
+                        <p>${data.cta.replace(/\n/g, '<br/>')}</p>
+                    </div>`;
+            }
+
+            if (data.ending) {
+                html += `
+                    <div class="section">
+                        <h2>Ending / Outro</h2>
+                        <p>${data.ending.replace(/\n/g, '<br/>')}</p>
+                    </div>`;
+            }
+
+            html += `</body></html>`;
+
+            const iframe = document.createElement('iframe');
+            iframe.style.position = 'absolute';
+            iframe.style.width = '0px';
+            iframe.style.height = '0px';
+            iframe.style.border = 'none';
+            document.body.appendChild(iframe);
+
+            const doc = iframe.contentWindow.document;
+            doc.open();
+            doc.write(html);
+            doc.close();
+
+            iframe.contentWindow.focus();
+            setTimeout(() => {
+                iframe.contentWindow.print();
+                setTimeout(() => document.body.removeChild(iframe), 1000);
+            }, 500);
+
+        } catch (e) {
+            setErrorMsg(`Failed to generate PDF: ${e.message}`);
+        }
+    };
+
     const renderOutputData = (jsonData) => {
         try {
             if (!jsonData) return "No output data.";
@@ -3015,6 +3104,12 @@ function YoutubeWorkspace({ project, onBack, learnFromFeedback }) {
 
                                 <div style={{ marginBottom: '1.5rem' }}>
                                     <button className="yt-btn-primary" style={{ width: '100%', padding: '0.6rem', fontSize: '0.8rem', fontWeight: 600 }} onClick={handleCopyBrief}>{copyBriefText}</button>
+
+                                    {activeAgentId === 5 && (
+                                        <button className="yt-btn-secondary" style={{ width: '100%', padding: '0.6rem', fontSize: '0.8rem', fontWeight: 600, marginTop: '0.6rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }} onClick={handleDownloadScriptPDF} disabled={!latestRun || !latestRun.OutputData}>
+                                            📄 Download Script as PDF
+                                        </button>
+                                    )}
                                 </div>
 
                                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.2rem' }}>LATEST FEEDBACK</div>
