@@ -36,4 +36,4 @@ Output strictly in JSON:
  "futureRecommendations": [""],
  "nextContentIdeas": [""]
 }
-Rules: Never fabricate missing analytics. Clearly mark unavailable data. Focus on learning patterns. Return ONLY valid JSON.`;
+Rules: Never fabricate missing analytics. If no analytics data is provided (e.g. video is not published yet), output EXACTLY "Pending Publication" for every single metric field. Focus on learning patterns when data is available. Return ONLY valid JSON.`;

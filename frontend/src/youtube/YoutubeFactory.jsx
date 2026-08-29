@@ -2688,11 +2688,11 @@ function YoutubeWorkspace({ project, onBack, learnFromFeedback }) {
                             <div style={{ fontSize: '0.9rem', color: '#e2e8f0' }}>{jsonData.performanceSummary}</div>
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.8rem' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.8rem' }}>
                             {jsonData.metricsAnalysis && Object.entries(jsonData.metricsAnalysis).map(([key, value]) => (
-                                <div key={key} style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '8px', padding: '0.8rem', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                    <b style={{ color: '#818cf8', display: 'block', marginBottom: '0.3rem', fontSize: '0.7rem', textTransform: 'uppercase' }}>{key.replace(/([A-Z])/g, ' $1').trim()}</b>
-                                    <div style={{ fontSize: '0.9rem', color: '#f8fafc', fontWeight: 'bold' }}>{value}</div>
+                                <div key={key} style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '8px', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <b style={{ color: '#818cf8', display: 'block', marginBottom: '0.4rem', fontSize: '0.75rem', textTransform: 'uppercase' }}>{key.replace(/([A-Z])/g, ' $1').trim()}</b>
+                                    <div style={{ fontSize: '0.9rem', color: String(value).includes('Pending') || String(value).includes('unavailable') ? '#9ca3af' : '#f8fafc', fontWeight: '500', lineHeight: '1.4' }}>{value}</div>
                                 </div>
                             ))}
                         </div>
