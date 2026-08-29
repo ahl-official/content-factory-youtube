@@ -5,15 +5,37 @@ const path = require('path');
 
 const PROMPT_TEMPLATE = fs.readFileSync(path.join(__dirname, '../prompts/analyticsPrompt.js'), 'utf-8');
 
-async function runAnalyticsAgent(project, analyticsData, scriptOutput, thumbnailConcept, finalTitle, feedback = "") {
+async function runAnalyticsAgent(project, analyticsUrl, scriptOutput, thumbnailConcept, finalTitle, feedback = "") {
+
+    let videoId = null;
+    let analyticsDataStr = "Pending Publication";
+
+    if (analyticsUrl && (analyticsUrl.includes('youtube.com') || analyticsUrl.includes('youtu.be'))) {
+        try {
+            const urlObj = new URL(analyticsUrl);
+            if (analyticsUrl.includes('youtu.be')) videoId = urlObj.pathname.slice(1);
+            else videoId = urlObj.searchParams.get('v');
+        } catch (e) {
+            console.error("Failed to parse YouTube URL:", analyticsUrl);
+        }
+    }
+
+    if (videoId) {
+        // [PLACEHOLDER FOR YOUTUBE OAUTH2 INTERACTION]
+        // Example:
+        // const authClient = new OAuth2(process.env.YOUTUBE_CLIENT_ID, process.env.YOUTUBE_CLIENT_SECRET);
+        // authClient.setCredentials({ refresh_token: process.env.YOUTUBE_REFRESH_TOKEN });
+        // const res = await youtubeAnalytics.reports.query({ ... ids: 'channel==MINE', dimensions: 'video', filters: `video==${videoId}` ...});
+        // For now, until the key is live, we return a mock dataset indicating active pull
+        analyticsDataStr = `Analytics Data Retrieved for Video ID: ${videoId}\nWatch Time: Waiting for OAuth Sync\nRetention Graph: Waiting for OAuth Sync\nCTR: Waiting for OAuth Sync`;
+    }
 
     const script = typeof scriptOutput === 'string' ? scriptOutput : JSON.stringify(scriptOutput, null, 2);
     const thumbStr = typeof thumbnailConcept === 'string' ? thumbnailConcept : JSON.stringify(thumbnailConcept, null, 2);
     const titleStr = finalTitle || "N/A";
-    const analyticsStr = typeof analyticsData === 'string' ? analyticsData : JSON.stringify(analyticsData || "No data provided", null, 2);
 
     let prompt = PROMPT_TEMPLATE
-        .replace('{{analytics}}', analyticsStr)
+        .replace('{{analytics}}', analyticsDataStr)
         .replace('{{script}}', script)
         .replace('{{thumbnail}}', thumbStr || 'None provided')
         .replace('{{title}}', titleStr)

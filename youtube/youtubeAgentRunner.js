@@ -314,8 +314,7 @@ async function runAgentStep({ projectId, agentId, inputData }) {
                 break;
             }
             case 15: {
-                const mockAnalytics = { views: "waiting", watchTime: "waiting", ctr: "waiting" };
-                output = await runAnalyticsAgent(project, mockAnalytics, wf.scriptOut, getOutput(AGENT_KEYS[7]), getFinalTitle(), inputData.feedback);
+                output = await runAnalyticsAgent(project, inputData.analyticsUrl, wf.scriptOut, getOutput(AGENT_KEYS[7]), getFinalTitle(), inputData.feedback);
                 break;
             }
             default:

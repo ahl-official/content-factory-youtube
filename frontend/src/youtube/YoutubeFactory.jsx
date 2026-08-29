@@ -1045,6 +1045,7 @@ function YoutubeWorkspace({ project, onBack, learnFromFeedback }) {
     // Data State
     const [runs, setRuns] = useState([]);
     const [feedbacks, setFeedbacks] = useState([]);
+    const [analyticsUrl, setAnalyticsUrl] = useState('');
 
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
@@ -1236,7 +1237,15 @@ function YoutubeWorkspace({ project, onBack, learnFromFeedback }) {
                         {fullProject.referenceNotes && <div><span style={{ color: '#a1a1aa' }}>Reference Notes:</span> Active</div>}
                     </>
                 )}
-                {activeAgentId > 1 && <div><span style={{ color: '#a1a1aa' }}>Prior Output:</span> Approved Data Available</div>}
+                {activeAgentId > 1 && activeAgentId !== 15 && <div><span style={{ color: '#a1a1aa' }}>Prior Output:</span> Approved Data Available</div>}
+
+                {activeAgentId === 15 && (
+                    <div style={{ marginTop: '1rem' }}>
+                        <div style={{ fontSize: '0.85rem', color: '#a1a1aa', marginBottom: '0.4rem' }}>YouTube Video URL for Analytics</div>
+                        <input className="input-field" placeholder="https://youtube.com/watch?v=..." value={analyticsUrl} onChange={e => setAnalyticsUrl(e.target.value)} style={{ width: '100%', fontSize: '0.8rem', padding: '0.5rem' }} />
+                        <div style={{ fontSize: '0.7rem', color: '#6b7280', marginTop: '0.3rem' }}>Paste the public URL of the uploaded video to connect it to this project's memory.</div>
+                    </div>
+                )}
             </div>
         );
     };
@@ -1248,7 +1257,8 @@ function YoutubeWorkspace({ project, onBack, learnFromFeedback }) {
         try {
             const payload = {
                 feedback: isRegeneration ? feedbackText : '',
-                previousOutput: isRegeneration && latestRun ? latestRun.OutputData : null
+                previousOutput: isRegeneration && latestRun ? latestRun.OutputData : null,
+                analyticsUrl: activeAgentId === 15 ? analyticsUrl : null
             };
 
             if (activeAgentId >= 3) {
