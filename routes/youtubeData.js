@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const ytDb = require('../youtube/youtubeDatabase');
 const logger = require('../logger');
+const { OAuth2Client } = require('google-auth-library');
 
 // Auto-initialize YouTube DB on module load to guarantee sheets exist before requests happen
 ytDb.initializeYoutubeSheets()
@@ -35,6 +36,37 @@ router.post('/db/save', async (req, res) => {
         }
         res.json({ success: true });
     } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.get('/oauth/url', (req, res) => {
+    try {
+        const client = new OAuth2Client(
+            process.env.YOUTUBE_CLIENT_ID,
+            process.env.YOUTUBE_CLIENT_SECRET,
+            req.query.redirectUri
+        );
+        const url = client.generateAuthUrl({
+            access_type: 'offline',
+            scope: ['https://www.googleapis.com/auth/yt-analytics.readonly'],
+            prompt: 'consent'
+        });
+        res.json({ url });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.post('/oauth/exchange', async (req, res) => {
+    try {
+        const client = new OAuth2Client(
+            process.env.YOUTUBE_CLIENT_ID,
+            process.env.YOUTUBE_CLIENT_SECRET,
+            req.body.redirectUri
+        );
+        const { tokens } = await client.getToken(req.body.code);
+        if (tokens.refresh_token) {
+            await ytDb.updateSetting('YOUTUBE_REFRESH_TOKEN', tokens.refresh_token);
+        }
+        res.json({ success: true, hasRefresh: !!tokens.refresh_token });
+    } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // Projects

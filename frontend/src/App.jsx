@@ -95,6 +95,27 @@ function App() {
   const [activeThumbnailStyleId, setActiveThumbnailStyleId] = useState(null);
   const [activeEditingStyleId, setActiveEditingStyleId] = useState(null);
 
+  // 0. OAuth Callback Intercept
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    if (code) {
+      fetch(`${API_URL}/yt/oauth/exchange`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: code, redirectUri: window.location.origin })
+      }).then(res => res.json()).then(data => {
+        if (data.success) {
+          alert('Successfully connected YouTube Analytics. You can now use Agent 15.');
+          // Remove the code from the URL without refreshing
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } else {
+          alert('Failed to connect YouTube Analytics: ' + data.error);
+        }
+      }).catch(e => console.error("OAuth Exchange Error", e));
+    }
+  }, []);
+
   // 1. Initial Load from Google Sheets DB
   useEffect(() => {
     fetch(`${API_URL}/db/load`)

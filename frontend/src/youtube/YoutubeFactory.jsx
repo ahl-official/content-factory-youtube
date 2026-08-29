@@ -1242,8 +1242,13 @@ function YoutubeWorkspace({ project, onBack, learnFromFeedback }) {
                 {activeAgentId === 15 && (
                     <div style={{ marginTop: '1rem' }}>
                         <div style={{ fontSize: '0.85rem', color: '#a1a1aa', marginBottom: '0.4rem' }}>YouTube Video URL for Analytics</div>
-                        <input className="input-field" placeholder="https://youtube.com/watch?v=..." value={analyticsUrl} onChange={e => setAnalyticsUrl(e.target.value)} style={{ width: '100%', fontSize: '0.8rem', padding: '0.5rem' }} />
-                        <div style={{ fontSize: '0.7rem', color: '#6b7280', marginTop: '0.3rem' }}>Paste the public URL of the uploaded video to connect it to this project's memory.</div>
+                        <input className="input-field" placeholder="https://youtube.com/watch?v=..." value={analyticsUrl} onChange={e => setAnalyticsUrl(e.target.value)} style={{ width: '100%', fontSize: '0.8rem', padding: '0.5rem', marginBottom: '0.5rem' }} />
+                        <div style={{ fontSize: '0.7rem', color: '#6b7280', marginTop: '0.3rem', marginBottom: '1rem' }}>Paste the public URL of the uploaded video to connect it to this project's memory.</div>
+                        <button onClick={async () => {
+                            const res = await fetch(`${API_URL}/yt/oauth/url?redirectUri=${encodeURIComponent(window.location.origin)}`);
+                            const data = await res.json();
+                            if (data.url) window.location.href = data.url;
+                        }} style={{ padding: '0.5rem 1rem', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '6px', fontSize: '0.8rem', cursor: 'pointer' }}>Connect YouTube Analytics Account</button>
                     </div>
                 )}
             </div>
