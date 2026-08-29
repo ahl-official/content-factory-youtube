@@ -1663,61 +1663,77 @@ function YoutubeWorkspace({ project, onBack, learnFromFeedback }) {
                 <head>
                     <title>${data.scriptTitle || fullProject?.WorkingTitle || 'YouTube Script'}</title>
                     <style>
-                        body { font-family: 'Georgia', serif; line-height: 1.8; color: #111; max-width: 800px; margin: 0 auto; padding: 40px; }
-                        h1 { font-family: 'Helvetica', sans-serif; font-size: 24pt; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 30px; text-align: center; }
-                        h2 { font-family: 'Helvetica', sans-serif; font-size: 16pt; margin-top: 30px; margin-bottom: 15px; color: #333; text-transform: uppercase; letter-spacing: 1px; }
-                        p { font-size: 12pt; margin-bottom: 20px; text-align: justify; }
-                        .section { margin-bottom: 40px; }
-                        .bullet-list { margin: 10px 0 20px 20px; }
-                        .bullet-list li { margin-bottom: 8px; font-size: 12pt; }
+                        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+                        body { background-color: #0f172a; color: #e2e8f0; font-family: 'Inter', sans-serif; line-height: 1.8; margin: 0; padding: 40px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                        .container { max-width: 850px; margin: 0 auto; background: #1e293b; padding: 50px; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+                        h1 { color: #f8fafc; font-size: 26pt; padding-bottom: 20px; margin-bottom: 20px; text-align: center; font-weight: 800; letter-spacing: -0.5px; line-height: 1.3; }
+                        h2 { color: #a78bfa; font-size: 13pt; margin-top: 0; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 800; border-bottom: 1px solid rgba(167, 139, 250, 0.2); padding-bottom: 10px; }
+                        p { font-size: 12pt; margin-bottom: 20px; text-align: left; color: #cbd5e1; font-weight: 400; }
+                        .section { background: #0f172a; padding: 30px; border-radius: 12px; margin-bottom: 30px; border: 1px solid rgba(139, 92, 246, 0.2); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+                        .bullet-list { margin: 10px 0 10px 20px; color: #cbd5e1; }
+                        .bullet-list li { margin-bottom: 12px; font-size: 11.5pt; font-weight: 400; }
+                        .header-badge { display: block; text-align: center; margin-bottom: 10px; }
+                        .header-badge span { background: #8b5cf6; color: white; padding: 6px 16px; border-radius: 20px; font-size: 10pt; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+                        .highlight-box { background: rgba(52, 211, 153, 0.1); border: 1px solid rgba(52, 211, 153, 0.3); border-radius: 8px; padding: 20px; text-align: center; margin-top: 40px; }
+                        .highlight-box h2 { color: #34d399; border-bottom: none; margin-bottom: 10px; padding-bottom: 0; }
+                        .highlight-box p { color: #a7f3d0; margin-bottom: 0; font-size: 13pt; font-weight: 600; text-align: center; }
                     </style>
                 </head>
                 <body>
-                    <h1>${data.scriptTitle || fullProject?.WorkingTitle || 'YouTube Script'}</h1>
-                    
-                    <div class="section">
-                        <h2>Opening / Hook</h2>
-                        <p>${(data.opening || '').replace(/\n/g, '<br/>')}</p>
-                    </div>
+                    <div class="container">
+                        <div class="header-badge"><span>Script Document</span></div>
+                        <h1>${data.scriptTitle || fullProject?.WorkingTitle || 'YouTube Script'}</h1>
+                        
+                        <div class="section">
+                            <h2>Opening / Hook</h2>
+                            <p>${(data.opening || '').replace(/\n/g, '<br/>')}</p>
+                        </div>
             `;
 
             if (data.chapters && Array.isArray(data.chapters)) {
                 data.chapters.forEach((ch, i) => {
                     html += `
-                    <div class="section">
-                        <h2>Chapter ${i + 1}: ${ch.chapterTitle || ''}</h2>
-                        <p>${(ch.scriptText || '').replace(/\n/g, '<br/>')}</p>
-                    </div>`;
+                        <div class="section">
+                            <h2>Chapter ${i + 1}: ${ch.chapterTitle || ''}</h2>
+                            <p>${(ch.scriptText || '').replace(/\n/g, '<br/>')}</p>
+                        </div>`;
                 });
             }
 
+            html += `<div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 40px;">`;
+
             if (data.rehooks && data.rehooks.length > 0) {
                 html += `
-                    <div class="section">
-                        <h2>Planned Rehooks & Transitions</h2>
-                        <ul class="bullet-list">
-                            ${data.rehooks.map(r => `<li>${r}</li>`).join('')}
-                        </ul>
-                    </div>`;
+                        <div class="section" style="flex: 1; min-width: 300px; margin-bottom: 0;">
+                            <h2>Planned Rehooks & Transitions</h2>
+                            <ul class="bullet-list">
+                                ${data.rehooks.map(r => `<li>${r}</li>`).join('')}
+                            </ul>
+                        </div>`;
             }
 
             if (data.cta) {
                 html += `
-                    <div class="section">
-                        <h2>Call To Action (CTA)</h2>
-                        <p>${data.cta.replace(/\n/g, '<br/>')}</p>
-                    </div>`;
+                        <div class="section" style="flex: 1; min-width: 300px; margin-bottom: 0;">
+                            <h2>Call To Action (CTA)</h2>
+                            <p style="text-align: center; font-weight: 600; color: #a78bfa;">${data.cta.replace(/\n/g, '<br/>')}</p>
+                        </div>`;
             }
+
+            html += `</div>`;
 
             if (data.ending) {
                 html += `
-                    <div class="section">
-                        <h2>Ending / Outro</h2>
-                        <p>${data.ending.replace(/\n/g, '<br/>')}</p>
-                    </div>`;
+                        <div class="highlight-box">
+                            <h2>Ending / Outro</h2>
+                            <p>${data.ending.replace(/\n/g, '<br/>')}</p>
+                        </div>`;
             }
 
-            html += `</body></html>`;
+            html += `
+                    </div>
+                </body>
+                </html>`;
 
             const iframe = document.createElement('iframe');
             iframe.style.position = 'absolute';
