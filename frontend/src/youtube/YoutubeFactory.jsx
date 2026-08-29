@@ -187,12 +187,20 @@ export default function YoutubeFactory() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ currentStyleGuide: sirStyleGuide, sirFeedback, scriptBefore, topic }),
             });
-            if (!res.ok) return;
+
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                setDbError(`Autonomous Engine Error: ${errData.error || res.statusText}. Check API quota.`);
+                return;
+            }
+
             const data = await res.json();
             if (data.isNewRule && data.updatedGuide) {
                 setSirStyleGuide(data.updatedGuide);
             }
-        } catch { /* silent */ }
+        } catch (e) {
+            setDbError(`Autonomous Engine Network Error: ${e.message}`);
+        }
     };
 
     const fetchProjects = () => {

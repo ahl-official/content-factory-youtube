@@ -609,13 +609,27 @@ Return ONLY this JSON (no markdown):
   "newPoint": "the exact sentence added (only if isNewRule is true, else null)"
 }`;
 
-    const resp = await openai.chat.completions.create({
-      model: config.INTENT_MODEL,
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0,
-    });
+    let text = '{}';
+    try {
+      const resp = await openai.chat.completions.create({
+        model: config.INTENT_MODEL,
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0,
+      });
+      text = (resp.choices[0]?.message?.content || '{}').trim();
+    } catch (openAiError) {
+      if (process.env.GEMINI_API_KEY) {
+        logger.warn('OpenRouter failed for /learn. Falling back to Gemini.');
+        const { GoogleGenerativeAI } = require('@google/generative-ai');
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const result = await model.generateContent(prompt);
+        text = (result.response.text() || '{}').trim();
+      } else {
+        throw openAiError;
+      }
+    }
 
-    let text = (resp.choices[0]?.message?.content || '{}').trim();
     text = text.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
 
     let result;
