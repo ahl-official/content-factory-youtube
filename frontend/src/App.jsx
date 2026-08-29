@@ -161,7 +161,7 @@ function App() {
 
   // 2. Sync to DB whenever core state changes
   useEffect(() => {
-    if (isLoadingDB || !dbLoadSuccess || engine !== 'reel') return; // Don't overwrite DB during initial load, failure, or if we are actively operating locally inside the youtube engine
+    if (isLoadingDB || !dbLoadSuccess || engineMode !== 'reels') return; // Don't overwrite DB during initial load, failure, or if we are actively operating locally inside the youtube engine
 
     const payload = {
       topics,
