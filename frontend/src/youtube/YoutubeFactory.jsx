@@ -1293,13 +1293,20 @@ function YoutubeWorkspace({ project, onBack, learnFromFeedback }) {
 
             if (raceResult === 'RACE_TIMEOUT') {
                 // Agent is now processing in the AWS Lambda background!
-                setJobStatusMsg('Agent is working in the background. Please wait...');
+                const startTime = Date.now();
+                setJobStatusMsg('Agent is working in the background (0:00). Please wait...');
                 const originalLength = currentAgentRuns.length;
                 let hitCount = 0;
 
                 const pollInterval = setInterval(async () => {
                     hitCount++;
-                    if (hitCount > 90) { // 6 minutes hard stop (90 * 4s) to allow massive Script Generations
+
+                    const elapsedNum = Math.floor((Date.now() - startTime) / 1000);
+                    const m = Math.floor(elapsedNum / 60);
+                    const s = (elapsedNum % 60).toString().padStart(2, '0');
+                    setJobStatusMsg(`Agent working in background (${m}:${s})... please wait`);
+
+                    if (hitCount > 300) { // 20 minutes hard stop (300 * 4s) to allow massive Script Generations
                         clearInterval(pollInterval);
                         setIsGenerating(false);
                         setJobStatusMsg('');
