@@ -1930,9 +1930,9 @@ function YoutubeWorkspace({ project, onBack, learnFromFeedback }) {
                         <ListSection title="Sources Used" items={jsonData.sources || jsonData.sourceContextUsed} color="#94a3b8" />
 
                         <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1rem', marginTop: '1rem' }}>
-                            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#a1a1aa', textTransform: 'uppercase', marginBottom: '0.6rem' }}>Provider Status</div>
+                            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#a1a1aa', textTransform: 'uppercase', marginBottom: '0.6rem' }}>Provider Status & Queries Used</div>
                             <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                                {['YouTube', 'Search', 'Reddit (Direct API)', 'Community Search', 'Evidence'].map(prov => {
+                                {['YouTube', 'Search', 'Community Search', 'Evidence'].map(prov => {
                                     const st = pvStatuses[prov] || 'Unknown';
                                     let icon = '⏸️'; let color = '#a1a1aa';
                                     if (st === 'success') { icon = '✓'; color = '#34d399'; }
@@ -1942,15 +1942,22 @@ function YoutubeWorkspace({ project, onBack, learnFromFeedback }) {
 
                                     // Custom label display
                                     let label = prov;
+                                    let queryHint = '';
                                     if (prov === 'Reddit (Direct API)' && st === 'oauth_required') {
                                         label = 'Direct Reddit API';
                                     } else if (prov === 'Community Search') {
                                         label = 'Community Research';
+                                        queryHint = `<span style="opacity:0.7">Query: site:reddit.com ${fullProject?.WorkingTitle || ''}</span>`;
+                                    } else if (prov === 'Search') {
+                                        queryHint = `<span style="opacity:0.7">Query: ${fullProject?.WorkingTitle || ''}</span>`;
                                     }
 
                                     return (
-                                        <div key={prov} style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.3rem', color }}>
-                                            <span>{icon}</span> {label} ({st.replace('_', ' ')})
+                                        <div key={prov} style={{ fontSize: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.1rem', color }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                                                <span>{icon}</span> {label} ({st.replace('_', ' ')})
+                                            </div>
+                                            {queryHint && <div style={{ marginLeft: '1.2rem' }} dangerouslySetInnerHTML={{ __html: queryHint }} />}
                                         </div>
                                     );
                                 })}
