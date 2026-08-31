@@ -121,6 +121,7 @@ module.exports = async function (req, res) {
             await ytDb.upsertAgentArtifact({ sheetName: 'YT_SEOPackage', projectId: projectId, agentId: 10, version: targetRun.Version, status: 'Approved' });
         } else if (agentKey === AGENT_KEYS.METADATA) {
             await ytDb.updateProject(projectId, { CurrentStage: 'Editor Preparation', Progress: '10.5', CurrentAgent: 11 });
+            await ytDb.upsertAgentArtifact({ sheetName: 'YT_Metadata', projectId: projectId, agentId: 10.5, version: targetRun.Version, status: 'Approved' });
         } else if (agentKey === AGENT_KEYS.EDITOR) {
             await ytDb.updateProject(projectId, { CurrentStage: 'Retention Review Preparation', Progress: '11', CurrentAgent: 12 });
             await ytDb.upsertAgentArtifact({ sheetName: 'YT_EditPlan', projectId: projectId, agentId: 11, version: targetRun.Version, status: 'Approved' });

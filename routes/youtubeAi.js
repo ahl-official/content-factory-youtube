@@ -696,6 +696,16 @@ router.post('/projects/:id/agents/metadata/run', async (req, res) => {
             IsApproved: false
         });
 
+        await ytDb.upsertAgentArtifact({
+            sheetName: 'YT_Metadata',
+            projectId: req.params.id,
+            agentId: 10.5,
+            version: version,
+            inputSnapshot: agentData,
+            outputJson: output,
+            status: 'Generated'
+        });
+
         await ytDb.updateProject(req.params.id, { CurrentStage: 'Metadata Review', CurrentAgent: 10.5 });
         res.json({ output, runRecord });
     } catch (err) {
