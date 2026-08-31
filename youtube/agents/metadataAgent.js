@@ -34,14 +34,13 @@ Generate the full YouTube Metadata JSON package perfectly formatted for immediat
     for (let attempts = 1; attempts <= 3; attempts++) {
         try {
             console.log(`[Metadata Agent] Attempt ${attempts}...`);
-            let rawData = await generate({ agentId: 10.5, sysPrompt: sysPrompt, userPrompt: userPrompt, schema: passThroughSchema, isScript: true });
+            let rawData = await generate({ agentId: 10.5, sysPrompt: sysPrompt, userPrompt: userPrompt, schema: metadataSchema, isScript: true });
 
             if (!rawData || !rawData.uploadMetadata) {
                 throw new Error("Validation Failed: Empty output or missing uploadMetadata.");
             }
 
-            // Allow it to pass with robust validation
-            return metadataSchema.parse(rawData);
+            return rawData;
         } catch (err) {
             console.warn(`Metadata Agent attempt ${attempts} failed: ${err.message}`);
             if (attempts === 3) throw err;
