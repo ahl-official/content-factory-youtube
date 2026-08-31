@@ -1639,14 +1639,27 @@ function YoutubeWorkspace({ project, onBack, learnFromFeedback }) {
 
             // ── TRIGGER AUTONOMOUS LEARNING ──
             if (!isApproval && sirFeedbackText?.trim()) {
-                if (typeof learnFromFeedback === 'function') {
-                    // Send it to the autonomous system without blocking
-                    learnFromFeedback({
-                        sirFeedback: sirFeedbackText,
-                        scriptBefore: typeof latestRun?.OutputData === 'string' ? latestRun.OutputData : JSON.stringify(latestRun?.OutputData || {}),
-                        topic: fullProject.WorkingTitle || ''
-                    });
-                }
+                fetch(`${API_URL}/yt/learning/feedback`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        feedback: sirFeedbackText,
+                        agentName: activeAgent?.name || 'General Agent',
+                        projectId: fullProject.ProjectID,
+                        extractedRule: `Avoid: ${sirFeedbackText.substring(0, 150)}`,
+                        category: 'Correction / Limitation',
+                        appliesTo: [activeAgent?.name || 'General Agent']
+                    })
+                }).catch(e => console.error("Failed to commit autonomous feedback:", e));
+            } else if (isApproval) {
+                fetch(`${API_URL}/yt/learning/approval`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        projectId: fullProject.ProjectID,
+                        agentName: activeAgent?.name || 'General Agent',
+                        output: typeof latestRun?.OutputData === 'string' ? latestRun.OutputData : JSON.stringify(latestRun?.OutputData || {}),
+                        approvalReason: sirFeedbackText?.trim() || "Approved by Sir"
+                    })
+                }).catch(e => console.error("Failed to commit autonomous approval:", e));
             }
 
             setSirFeedbackText('');
@@ -3296,45 +3309,7 @@ function YoutubeSettings() {
                     </div>
                 </div>
 
-                {/* B) Learned Sir Style */}
-                <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: '12px' }}>
-                    <h3 style={{ margin: '0 0 1rem 0', color: '#e4e4e7', fontSize: '1.1rem' }}>Learned Sir Style Guide</h3>
-                    <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
-                        The core architectural style extracted from overarching video corrections.
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-                        <div>
-                            <div style={{ fontSize: '0.75rem', color: '#a855f7', marginBottom: '0.4rem', textTransform: 'uppercase', fontWeight: 600 }}>Content Style</div>
-                            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '0.8rem', borderRadius: '8px', color: '#e4e4e7', fontSize: '0.9rem' }}>
-                                {learnedStyle.contentStyle || 'No content style learned yet.'}
-                            </div>
-                        </div>
-                        <div>
-                            <div style={{ fontSize: '0.75rem', color: '#34d399', marginBottom: '0.4rem', textTransform: 'uppercase', fontWeight: 600 }}>Script Style</div>
-                            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '0.8rem', borderRadius: '8px', color: '#e4e4e7', fontSize: '0.9rem' }}>
-                                {learnedStyle.scriptStyle || 'No script style learned yet.'}
-                            </div>
-                        </div>
-                        <div>
-                            <div style={{ fontSize: '0.75rem', color: '#fbbf24', marginBottom: '0.4rem', textTransform: 'uppercase', fontWeight: 600 }}>Title Preferences</div>
-                            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '0.8rem', borderRadius: '8px', color: '#e4e4e7', fontSize: '0.9rem' }}>
-                                {learnedStyle.titlePreferences || 'No title preferences learned yet.'}
-                            </div>
-                        </div>
-                        <div>
-                            <div style={{ fontSize: '0.75rem', color: '#ef4444', marginBottom: '0.4rem', textTransform: 'uppercase', fontWeight: 600 }}>Thumbnail Preferences</div>
-                            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '0.8rem', borderRadius: '8px', color: '#e4e4e7', fontSize: '0.9rem' }}>
-                                {learnedStyle.thumbnailPreferences || 'No thumbnail preferences learned yet.'}
-                            </div>
-                        </div>
-                        <div>
-                            <div style={{ fontSize: '0.75rem', color: '#60a5fa', marginBottom: '0.4rem', textTransform: 'uppercase', fontWeight: 600 }}>Brand Preferences</div>
-                            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '0.8rem', borderRadius: '8px', color: '#e4e4e7', fontSize: '0.9rem' }}>
-                                {learnedStyle.brandPreferences || 'No brand preferences learned yet.'}
-                            </div>
-                        </div>
-                    </div>
-                </div>
+
 
                 {/* C) Learned Preferences */}
                 <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: '12px' }}>
