@@ -1124,7 +1124,7 @@ router.post('/projects/:id/sir-review', async (req, res) => {
             } else if (stage === 'Script' || stage === 'script') {
                 await ytDb.updateProject(req.params.id, { CurrentStage: 'Script Approved', Progress: '5' });
             } else if (stage === 'SEO' || stage === 'seo') {
-                await ytDb.updateProject(req.params.id, { CurrentStage: 'SEO Approved', CurrentAgent: '11', Progress: '10' });
+                await ytDb.updateProject(req.params.id, { CurrentStage: 'SEO Approved, Moving to Metadata', CurrentAgent: '10.5', Progress: '10' });
             } else if (stage === 'retention' || stage === 'Retention') {
                 await ytDb.updateProject(req.params.id, { CurrentStage: 'Retention Approved', CurrentAgent: '13', Progress: '12' });
             } else if (stage === 'brand' || stage === 'Brand') {
