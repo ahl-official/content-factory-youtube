@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import YoutubeFactory from './youtube/YoutubeFactory';
 
-const API_URL = import.meta.env.PROD ? '/api' : 'http://localhost:3000/api';
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '/api' : 'http://localhost:3000/api');
 
 const STATUS_LABELS = {
   idea: { label: 'Idea', color: '#94a3b8', bg: 'rgba(148,163,184,0.15)' },
