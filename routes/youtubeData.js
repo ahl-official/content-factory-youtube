@@ -275,7 +275,11 @@ router.get('/learning', (req, res) => {
 const saveMemory = (mem) => {
     const fs = require('fs');
     const path = require('path');
-    const memPath = path.join(__dirname, '../memory/youtubeLearning.json');
+    const memDir = path.join(__dirname, '../memory');
+    if (!fs.existsSync(memDir)) {
+        fs.mkdirSync(memDir, { recursive: true });
+    }
+    const memPath = path.join(memDir, 'youtubeLearning.json');
     fs.writeFileSync(memPath, JSON.stringify(mem, null, 2), 'utf8');
 };
 
