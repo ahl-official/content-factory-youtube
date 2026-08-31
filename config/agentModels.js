@@ -11,6 +11,7 @@ module.exports = {
     "8": { provider: "openrouter", model: "openrouter/free" },
     "9": { provider: "gemini", model: aiModels.gemini.default },
     "10": { provider: "openrouter", model: "openrouter/free" },
+    "10.5": { provider: "gemini", model: aiModels.gemini.default },
     "11": { provider: "openrouter", model: "openrouter/free" },
     "12": { provider: "gemini", model: aiModels.gemini.default },
     "13": { provider: "openrouter", model: "openrouter/free" },
