@@ -1294,73 +1294,40 @@ function YoutubeWorkspace({ project, onBack, learnFromFeedback }) {
                 }).catch(console.error);
             }
 
-            // Immediately trigger generation WITHOUT blocking the frontend for Vercel's 10s limit
-            const fetchPromise = fetch(`${API_URL}/youtube/generate`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ projectId: fullProject.ProjectID, currentAgent: activeAgentId, payload })
-            });
+            const startTime = Date.now();
+            setJobStatusMsg('Starting Agent Execution...');
 
-            // Artificial 5-second intercept to gracefully shift UI into polling mode
-            const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve('RACE_TIMEOUT'), 5000));
-            const raceResult = await Promise.race([fetchPromise, timeoutPromise]);
+            const timerInterval = setInterval(() => {
+                const elapsedNum = Math.floor((Date.now() - startTime) / 1000);
+                const m = Math.floor(elapsedNum / 60);
+                const s = (elapsedNum % 60).toString().padStart(2, '0');
+                setJobStatusMsg(`Agent generating (${m}:${s})... please wait`);
+            }, 1000);
 
-            if (raceResult === 'RACE_TIMEOUT') {
-                // Agent is now processing in the AWS Lambda background!
-                const startTime = Date.now();
-                setJobStatusMsg('Agent is working in the background (0:00). Please wait...');
-                const originalLength = currentAgentRuns.length;
-                let hitCount = 0;
-
-                const pollInterval = setInterval(async () => {
-                    hitCount++;
-
-                    const elapsedNum = Math.floor((Date.now() - startTime) / 1000);
-                    const m = Math.floor(elapsedNum / 60);
-                    const s = (elapsedNum % 60).toString().padStart(2, '0');
-                    setJobStatusMsg(`Agent working in background (${m}:${s})... please wait`);
-
-                    if (hitCount > 300) { // 20 minutes hard stop (300 * 4s) to allow massive Script Generations
-                        clearInterval(pollInterval);
-                        setIsGenerating(false);
-                        setJobStatusMsg('');
-                        fetchWorkspaceData(true);
-                        return;
-                    }
-                    try {
-                        const rRes = await fetch(`${API_URL}/yt/projects/${fullProject.ProjectID}/agent-runs`);
-                        if (!rRes.ok) return;
-                        const rData = await rRes.json();
-                        if (Array.isArray(rData)) {
-                            const newRuns = rData.filter(r => r.AgentKey === activeAgentKey);
-                            if (newRuns.length > originalLength) {
-                                // Agent completely successfully generated inside Vercel background!
-                                clearInterval(pollInterval);
-                                setRuns(rData);
-                                setFeedbackText('');
-                                setShowFeedback(false);
-                                setJobStatusMsg('');
-                                setIsGenerating(false);
-                                fetchWorkspaceData(true);
-                            }
-                        }
-                    } catch (e) {
-                        // ignore network stutter during background silent polls
-                    }
-                }, 4000);
-                return; // halt and rely entirely on the polling cycle for UI state!
+            let res;
+            try {
+                res = await fetch(`${API_URL}/youtube/generate`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ projectId: fullProject.ProjectID, currentAgent: activeAgentId, payload })
+                });
+            } catch (err) {
+                clearInterval(timerInterval);
+                throw new Error("Network connection failed or Vercel forcibly closed the connection.");
             }
 
-            // If we completed under 5 seconds (e.g. grabbed from db cache)
-            const textResponse = await raceResult.text();
+            clearInterval(timerInterval);
+
+            const textResponse = await res.text();
             let data;
             try {
                 data = JSON.parse(textResponse);
             } catch (e) {
-                // Native timeout / invalid dump
-                throw new Error("Invalid response format from server.");
+                throw new Error("Invalid response format from server (possibly timed out). Raw: " + textResponse.substring(0, 50));
             }
 
-            if (!raceResult.ok || data.status === 'failed') throw new Error(data.error || 'Agent execution failed');
+            if (!res.ok || data.status === 'failed') {
+                throw new Error(data.error || 'Agent execution failed');
+            }
 
             setFeedbackText('');
             setShowFeedback(false);
