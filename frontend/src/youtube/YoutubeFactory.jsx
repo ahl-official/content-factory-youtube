@@ -137,6 +137,7 @@ export default function YoutubeFactory({
     const [isLoadingDB, setIsLoadingDB] = useState(true);
     const [dbLoadSuccess, setDbLoadSuccess] = useState(false);
     const [dbError, setDbError] = useState(null);
+    const [isYoutubeConnected, setIsYoutubeConnected] = useState(false);
 
     // Load Youtube DB Settings
     useEffect(() => {
@@ -158,6 +159,8 @@ export default function YoutubeFactory({
                 if (data.activeThumbnailStyleId !== undefined) setActiveThumbnailStyleId(data.activeThumbnailStyleId || 1);
                 if (data.activeEditingStyleId !== undefined) setActiveEditingStyleId(data.activeEditingStyleId || 1);
 
+                if (data.YOUTUBE_REFRESH_TOKEN) setIsYoutubeConnected(true);
+
                 setDbLoadSuccess(true);
             })
             .catch(e => {
@@ -165,6 +168,21 @@ export default function YoutubeFactory({
                 setDbError("Failed to connect to YouTube Google Sheets Database.");
             })
             .finally(() => setIsLoadingDB(false));
+    }, []);
+
+    // Listen for OAuth interception success from App.jsx parent
+    useEffect(() => {
+        const handleSuccess = () => setIsYoutubeConnected(true);
+        window.addEventListener('youtube_oauth_success', handleSuccess);
+
+        // Auto-restore project if returning from OAuth
+        const pendingProject = localStorage.getItem('yt_pending_oauth_project');
+        if (pendingProject) {
+            setActiveProjectId(pendingProject);
+            localStorage.removeItem('yt_pending_oauth_project');
+        }
+
+        return () => window.removeEventListener('youtube_oauth_success', handleSuccess);
     }, []);
 
     // Save Youtube DB Sync
@@ -1257,11 +1275,22 @@ function YoutubeWorkspace({ project, onBack, learnFromFeedback }) {
                         <div style={{ fontSize: '0.85rem', color: '#a1a1aa', marginBottom: '0.4rem' }}>YouTube Video URL for Analytics</div>
                         <input className="input-field" placeholder="https://youtube.com/watch?v=..." value={analyticsUrl} onChange={e => setAnalyticsUrl(e.target.value)} style={{ width: '100%', fontSize: '0.8rem', padding: '0.5rem', marginBottom: '0.5rem' }} />
                         <div style={{ fontSize: '0.7rem', color: '#6b7280', marginTop: '0.3rem', marginBottom: '1rem' }}>Paste the public URL of the uploaded video to connect it to this project's memory.</div>
-                        <button onClick={async () => {
-                            const res = await fetch(`${API_URL}/yt/oauth/url?redirectUri=${encodeURIComponent(window.location.origin)}`);
-                            const data = await res.json();
-                            if (data.url) window.location.href = data.url;
-                        }} style={{ padding: '0.5rem 1rem', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '6px', fontSize: '0.8rem', cursor: 'pointer' }}>Connect YouTube Analytics Account</button>
+
+                        {isYoutubeConnected ? (
+                            <button style={{ padding: '0.5rem 1rem', background: 'rgba(52, 211, 153, 0.1)', color: '#34d399', border: '1px solid rgba(52, 211, 153, 0.3)', borderRadius: '6px', fontSize: '0.8rem', cursor: 'default' }}>
+                                ✓ Connected to YouTube Analytics
+                            </button>
+                        ) : (
+                            <button onClick={async () => {
+                                localStorage.setItem('oauth_return_engine', 'youtube');
+                                localStorage.setItem('yt_pending_oauth_project', fullProject.ProjectID);
+                                const res = await fetch(`${API_URL}/yt/oauth/url?redirectUri=${encodeURIComponent(window.location.origin)}`);
+                                const data = await res.json();
+                                if (data.url) window.location.href = data.url;
+                            }} style={{ padding: '0.5rem 1rem', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '6px', fontSize: '0.8rem', cursor: 'pointer' }}>
+                                Connect YouTube Analytics Account
+                            </button>
+                        )}
                     </div>
                 )}
             </div>

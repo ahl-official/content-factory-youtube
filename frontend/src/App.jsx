@@ -99,7 +99,11 @@ function App() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
+    const returnEngine = localStorage.getItem('oauth_return_engine');
+
     if (code) {
+      if (returnEngine === 'youtube') setEngineMode('youtube'); // Ensure we stay in YouTube mode natively
+
       fetch(`${API_URL}/yt/oauth/exchange`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -107,8 +111,10 @@ function App() {
       }).then(res => res.json()).then(data => {
         if (data.success) {
           alert('Successfully connected YouTube Analytics. You can now use Agent 15.');
-          // Remove the code from the URL without refreshing
-          window.history.replaceState({}, document.title, window.location.pathname);
+          const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+          window.history.replaceState({ path: newUrl }, '', newUrl); // Wipe code securely
+          window.dispatchEvent(new Event('youtube_oauth_success')); // Notify children
+          localStorage.removeItem('oauth_return_engine');
         } else {
           alert('Failed to connect YouTube Analytics: ' + data.error);
         }
