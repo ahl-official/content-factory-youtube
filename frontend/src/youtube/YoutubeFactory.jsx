@@ -113,8 +113,6 @@ export default function YoutubeFactory({
     activeEditingStyle,
     activeThumbnailStyle,
     activeCreator,
-    videoFormats,
-    hookLibrary,
     sirStyleGuide: globalSirStyleGuide
 }) {
     const [view, setView] = useState('dashboard');

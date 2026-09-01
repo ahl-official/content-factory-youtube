@@ -382,8 +382,6 @@ function App() {
           activeThumbnailStyle={thumbnailStyles.find(t => t.id === activeThumbnailStyleId)}
           activeCreator={creatorReferences.find(c => c.id === activeCreatorId)}
           sirStyleGuide={sirStyleGuide}
-          videoFormats={videoFormats}
-          hookLibrary={hookLibrary}
         />
       )}
     </div>
