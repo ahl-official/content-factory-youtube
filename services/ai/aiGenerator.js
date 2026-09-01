@@ -91,8 +91,8 @@ async function generate({ agentId, sysPrompt, userPrompt, schema, isScript = fal
 
     const temperature = ytConfig.TEMPERATURE;
 
-    // Retry only once (0 and 1)
-    for (let attempts = 0; attempts < 2; attempts++) {
+    // Disable silent background retries to protect 15 RPM Free limits
+    for (let attempts = 0; attempts < 1; attempts++) {
         let currentProvider = 'Unknown';
         try {
             const result = await routeGeneration({

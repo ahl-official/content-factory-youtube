@@ -58,7 +58,8 @@ async function runOpenRouter(sysPrompt, userPrompt, schema, isScript = false) {
     let agentName = agentNameMatch ? agentNameMatch[1].trim() : 'Unknown';
     sysPrompt = injectMemoryContext(agentName, sysPrompt);
 
-    for (let attempts = 0; attempts < 2; attempts++) {
+    // Disable implicit AI retries to stop compounding Free API 15 RPM exhaustion
+    for (let attempts = 0; attempts < 1; attempts++) {
         try {
             const fetch = (await import('node-fetch')).default || global.fetch;
             const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {

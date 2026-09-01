@@ -14,7 +14,7 @@ async function runScriptAgent(projectContext, researchOut, angleOut, strategistO
     // isScript = true unlocks maxTokens required for long scripts
     let lastError = null;
 
-    for (let attempts = 0; attempts < 3; attempts++) {
+    for (let attempts = 0; attempts < 1; attempts++) {
         try {
             const result = await generate({ agentId: 5, sysPrompt: sysPrompt, userPrompt: userPrompt, schema: scriptSchema, isScript: true });
 
