@@ -1,12 +1,16 @@
 const openRouterService = require('./openRouterService');
 const geminiService = require('./geminiService');
+const groqService = require('./groqService');
+const deepseekService = require('./deepseekService');
 const agentModels = require('../../config/agentModels');
 const logger = require('../../logger');
 const aiModels = require('../../config/aiModels');
 
 const providerHealth = {
     gemini: { consecutiveFailures: 0, lastFailureTs: 0 },
-    openrouter: { consecutiveFailures: 0, lastFailureTs: 0 }
+    openrouter: { consecutiveFailures: 0, lastFailureTs: 0 },
+    groq: { consecutiveFailures: 0, lastFailureTs: 0 },
+    deepseek: { consecutiveFailures: 0, lastFailureTs: 0 }
 };
 
 function recordFailure(provider) {
@@ -22,7 +26,7 @@ function recordSuccess(provider) {
 
 function getRoutingSequence(primaryConfig) {
     const now = Date.now();
-    ['gemini', 'openrouter'].forEach(prov => {
+    ['gemini', 'openrouter', 'groq', 'deepseek'].forEach(prov => {
         if (now - providerHealth[prov].lastFailureTs > 5 * 60 * 1000) {
             providerHealth[prov].consecutiveFailures = 0;
         }
@@ -33,6 +37,18 @@ function getRoutingSequence(primaryConfig) {
     if (primaryConfig.provider === 'gemini') {
         sequence = [
             { provider: 'gemini', model: primaryConfig.model },
+            { provider: 'gemini', model: aiModels.gemini.fast },
+            { provider: 'openrouter', model: 'openrouter/free' }
+        ];
+    } else if (primaryConfig.provider === 'groq') {
+        sequence = [
+            { provider: 'groq', model: primaryConfig.model },
+            { provider: 'gemini', model: aiModels.gemini.fast },
+            { provider: 'openrouter', model: 'openrouter/free' }
+        ];
+    } else if (primaryConfig.provider === 'deepseek') {
+        sequence = [
+            { provider: 'deepseek', model: primaryConfig.model },
             { provider: 'gemini', model: aiModels.gemini.fast },
             { provider: 'openrouter', model: 'openrouter/free' }
         ];
@@ -76,6 +92,13 @@ async function routeGeneration({ agentId, sysPrompt, userPrompt, maxTokens, temp
             let result;
             if (provider === 'gemini') {
                 result = await geminiService.generate({ agentId, model, sysPrompt: finalSysPrompt, userPrompt, maxTokens, temperature, attempts });
+            } else if (provider === 'groq') {
+                // For custom baremetal scripts
+                const groqOutput = await groqService.inferWithGroq(finalSysPrompt, userPrompt, model, maxTokens, temperature);
+                result = { responseText: groqOutput.content, finishReason: groqOutput.finishReason };
+            } else if (provider === 'deepseek') {
+                const dsOutput = await deepseekService.inferWithDeepseek(finalSysPrompt, userPrompt, model, maxTokens, temperature);
+                result = { responseText: dsOutput.content, finishReason: dsOutput.finishReason };
             } else {
                 result = await openRouterService.generate({ agentId, model, sysPrompt: finalSysPrompt, userPrompt, maxTokens, temperature, attempts });
             }
