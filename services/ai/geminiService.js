@@ -129,12 +129,23 @@ async function generate({ agentId, model, sysPrompt, userPrompt, maxTokens, temp
                 }
             }
 
-            // OpenRouter fallback triggered unchanged
+            // Automatic 6-second stagger if we hit Gemini 15 RPM limit to safely wait out the window
+            if (err.status === 429) {
+                logger.warn(`[Gemini Service] Rate Limit (429) reached on Model: ${currentModelId}. Staggering 6 seconds to recover RPM bucket...`);
+                await new Promise(r => setTimeout(r, 6000));
+
+                // Allow one pure retry if we haven't exhausted the pool!
+                if (i < targetPool.length - 1) {
+                    continue;
+                }
+            }
+
+            // OpenRouter/Fallback triggered unchanged
             if (err.status === 429 || (err.message && err.message.toLowerCase().includes('quota'))) {
                 throw new Error(`PROVIDER_ERROR: QUOTA_EXHAUSTED`);
             }
 
-            // Exausted pool or unrecoverable non-retryable error
+            // Exhausted pool or unrecoverable non-retryable error
             throw new Error(`PROVIDER_ERROR: HTTP_${err.status}`);
         }
     }
