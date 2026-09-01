@@ -240,11 +240,11 @@ export default function YoutubeFactory({
 
         const style = document.createElement('style');
         style.innerHTML = `
-      .yt-viewport-lock { height: calc(100vh - 65px); display: flex; flex-direction: column; overflow: hidden; margin-top: 0.5rem; }
+      .yt-viewport-lock { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; margin-top: 0.5rem; }
       .yt-workspace-container { flex: 1; display: grid; grid-template-columns: 220px 660px 220px; justify-content: center; gap: 1rem; overflow: hidden; min-height: 0; }
       @media (max-width: 900px) {
          .yt-workspace-container { flex-direction: column; overflow-y: auto; height: auto; display: flex; }
-         .yt-viewport-lock { height: auto; overflow: visible; }
+         .yt-viewport-lock { height: auto; overflow: visible; flex: none; }
       }
       .yt-custom-scrollbar::-webkit-scrollbar { width: 4px; }
       .yt-custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
