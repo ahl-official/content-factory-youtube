@@ -48,15 +48,16 @@ let modelPools = {
 })();
 
 function getModelPool(requestedModel) {
-    // If an exact standard gemini model is requested, just use it directly!
-    if (requestedModel.includes('-') && (requestedModel.includes('flash') || requestedModel.includes('pro'))) {
-        return [requestedModel];
+    // If the requested model implies "fast" or "flash", route to the dynamically validated fast pool
+    if (requestedModel.includes('flash') || requestedModel === 'gemini-fast' || requestedModel === 'fast') {
+        return modelPools.fast.length > 0 ? modelPools.fast : ['gemini-1.5-flash', 'gemini-1.5-flash-8b'];
     }
 
-    if (requestedModel === 'gemini-fast' || requestedModel === 'fast') return modelPools.fast.length > 0 ? modelPools.fast : ['gemini-1.5-flash', 'gemini-1.5-flash-8b'];
-    if (requestedModel === 'gemini-transcription') return modelPools.transcription.length > 0 ? modelPools.transcription : ['gemini-1.5-flash'];
+    if (requestedModel === 'gemini-transcription') {
+        return modelPools.transcription.length > 0 ? modelPools.transcription : ['gemini-1.5-flash'];
+    }
 
-    // Default mapped for gemini-reasoning or unknown requests
+    // Default mapped for gemini-reasoning, 'pro', or unknown requests
     return modelPools.reasoning.length > 0 ? modelPools.reasoning : ['gemini-1.5-pro', 'gemini-1.5-flash'];
 }
 
