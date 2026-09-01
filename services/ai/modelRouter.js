@@ -38,19 +38,19 @@ function getRoutingSequence(primaryConfig) {
         sequence = [
             { provider: 'gemini', model: primaryConfig.model },
             { provider: 'gemini', model: aiModels.gemini.fast },
-            { provider: 'openrouter', model: 'openrouter/free' }
+            { provider: 'openrouter', model: aiModels.openRouter.free }
         ];
     } else if (primaryConfig.provider === 'groq') {
         sequence = [
             { provider: 'groq', model: primaryConfig.model },
             { provider: 'gemini', model: aiModels.gemini.fast },
-            { provider: 'openrouter', model: 'openrouter/free' }
+            { provider: 'openrouter', model: aiModels.openRouter.free }
         ];
     } else if (primaryConfig.provider === 'deepseek') {
         sequence = [
             { provider: 'deepseek', model: primaryConfig.model },
             { provider: 'gemini', model: aiModels.gemini.fast },
-            { provider: 'openrouter', model: 'openrouter/free' }
+            { provider: 'openrouter', model: aiModels.openRouter.free }
         ];
     } else {
         sequence = [
