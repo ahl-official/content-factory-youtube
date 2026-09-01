@@ -347,26 +347,27 @@ export default function YoutubeFactory({
     return (
         <div className={view === 'workspace' ? 'yt-viewport-lock' : ''} style={view !== 'workspace' ? { display: 'flex', flexDirection: 'column', height: '100%', marginTop: '0.5rem' } : {}}>
 
-            {view !== 'workspace' && (
-                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexShrink: 0, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                    <h2 style={{ margin: '0 1rem 0 0', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.2rem' }}>📺 YouTube Engine</h2>
-                    <button className={view === 'dashboard' ? 'yt-btn-primary' : 'yt-btn-secondary'} onClick={() => setView('dashboard')}>Projects Dashboard</button>
-                    <button className={view === 'new_project' ? 'yt-btn-primary' : 'yt-btn-secondary'} onClick={() => setView('new_project')}>+ New YouTube Video</button>
-                    <button className={view === 'settings' ? 'yt-btn-primary' : 'yt-btn-secondary'} onClick={() => setView('settings')}>Auto-Learning Memory</button>
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexShrink: 0, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                <h2 style={{ margin: '0 1rem 0 0', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.2rem' }}>📺 YouTube Engine</h2>
+                <button className={view === 'dashboard' ? 'yt-btn-primary' : 'yt-btn-secondary'} onClick={() => { setView('dashboard'); setActiveProjectId(null); }}>Projects Dashboard</button>
+                <button className={view === 'new_project' ? 'yt-btn-primary' : 'yt-btn-secondary'} onClick={() => { setView('new_project'); setActiveProjectId(null); }}>+ New YouTube Video</button>
+                <button className={view === 'settings' ? 'yt-btn-primary' : 'yt-btn-secondary'} onClick={() => setView('settings')}>Auto-Learning Memory</button>
 
-                    <div style={{ width: '100%', height: '10px' }}></div>
+                {activeProjectId && view !== 'workspace' && (
+                    <button className="yt-btn-success" style={{ marginLeft: 'auto' }} onClick={() => setView('workspace')}>⬅ Return to Project</button>
+                )}
 
-                    <button className={`btn ${view === 'guide' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('guide')}>🧠 Sir's Style Guide {sirStyleGuide ? '●' : ''}</button>
-                    <button className={`btn ${view === 'creators' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('creators')}>🎬 Creator Playbook {activeCreatorId ? '●' : ''}</button>
-                    <button className={`btn ${view === 'audiences' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('audiences')}>🎯 Target Audience {activeAudienceId ? '●' : ''}</button>
-                    <button className={`btn ${view === 'brands' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('brands')}>👑 Brand Voices {activeBrandVoiceId ? '●' : ''}</button>
-                    <button className={`btn ${view === 'thumbnails' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('thumbnails')}>🖼️ Thumbnail Styles {activeThumbnailStyleId ? '●' : ''}</button>
-                    <button className={`btn ${view === 'editing' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('editing')}>✂️ Editing Styles {activeEditingStyleId ? '●' : ''}</button>
-                    <button className={`btn ${view === 'formats' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('formats')}>🎬 Video Formats</button>
-                    <button className={`btn ${view === 'hooks' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('hooks')}>🪝 Hook Library</button>
+                <div style={{ width: '100%', height: '5px' }}></div>
 
-                </div>
-            )}
+                <button className={`btn ${view === 'guide' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('guide')}>🧠 Sir's Style Guide {sirStyleGuide ? '●' : ''}</button>
+                <button className={`btn ${view === 'creators' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('creators')}>🎬 Creator Playbook {activeCreatorId ? '●' : ''}</button>
+                <button className={`btn ${view === 'audiences' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('audiences')}>🎯 Target Audience {activeAudienceId ? '●' : ''}</button>
+                <button className={`btn ${view === 'brands' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('brands')}>👑 Brand Voices {activeBrandVoiceId ? '●' : ''}</button>
+                <button className={`btn ${view === 'thumbnails' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('thumbnails')}>🖼️ Thumbnail Styles {activeThumbnailStyleId ? '●' : ''}</button>
+                <button className={`btn ${view === 'editing' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('editing')}>✂️ Editing Styles {activeEditingStyleId ? '●' : ''}</button>
+                <button className={`btn ${view === 'formats' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('formats')}>🎬 Video Formats</button>
+                <button className={`btn ${view === 'hooks' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('hooks')}>🪝 Hook Library</button>
+            </div>
 
             {view === 'dashboard' && <YoutubeDashboard projects={projects} onOpen={(id) => { setActiveProjectId(id); setView('workspace'); }} />}
             {view === 'settings' && <YoutubeSettings />}
