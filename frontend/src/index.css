@@ -51,10 +51,6 @@ h4 {
   animation: fadeInDown 0.8s ease-out;
 }
 
-.app-container:has(.yt-viewport-lock) .header {
-  display: none !important;
-}
-
 .title {
   font-size: 3.5rem;
   font-weight: 700;
