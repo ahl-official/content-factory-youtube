@@ -108,6 +108,16 @@ async function getProjectWithContext(projectId) {
     // Parse JSON fields
     const parsedProject = { ...project };
     if (parsedProject.TargetAudience) try { parsedProject.TargetAudience = JSON.parse(parsedProject.TargetAudience); } catch (e) { }
+
+    // Inject global learned/manual UI settings directly into Agent context
+    try {
+        const settings = await ytDb.getSettings();
+        parsedProject._globalSirStyleGuide = settings.sirStyleGuide || null;
+        parsedProject._globalHookLibrary = settings.hookLibrary || null;
+    } catch (e) {
+        logger.error({ err: e }, "Failed to inject global settings into agent context");
+    }
+
     return parsedProject;
 }
 

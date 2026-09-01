@@ -38,4 +38,4 @@ Output strictly in JSON:
  "publishReady": false,
  "finalDecision": ""
 }
-Rules: Be strict. Do not approve if major problems exist. Give actionable feedback. Return ONLY valid JSON.`;
+Rules: Be critical but sensible. If minor inconsistencies exist, note them as improvements but do not hard-reject if the overall script is good. Return ONLY valid JSON.`;

@@ -32,6 +32,14 @@ async function runEditorAgent(project, scriptOutput, productionPlan, thumbnailCo
         prompt += `\n\n=== PREVIOUS OUTPUT TO REVISE ===\n${JSON.stringify(previousOutput, null, 2)}`;
     }
 
+    if (project.EditingStyleRule) {
+        prompt += `\n\n[MANDATORY EDITOR RULE]:\n${project.EditingStyleRule}`;
+    }
+    if (project._globalSirStyleGuide) {
+        prompt += `\n\n[SIR'S GLOBAL STYLE GUIDE]:\n${project._globalSirStyleGuide}`;
+    }
+
+
     let lastError = null;
 
     for (let attempts = 1; attempts <= 3; attempts++) {

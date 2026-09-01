@@ -375,7 +375,16 @@ function App() {
           {view === 'topic' && currentTopic && <TopicDetail topic={currentTopic} updateTopic={updateTopic} onBack={() => setView('board')} setError={setError} sirStyleGuide={sirStyleGuide} learnFromFeedback={learnFromFeedback} creatorReferences={creatorReferences} targetAudiences={targetAudiences} brandVoices={brandVoices} thumbnailStyles={thumbnailStyles} editingStyles={editingStyles} hookLibrary={hookLibrary} videoFormats={videoFormats} activeCreatorId={activeCreatorId} activeAudienceId={activeAudienceId} />}
         </>
       ) : (
-        <YoutubeFactory />
+        <YoutubeFactory
+          activeAudience={targetAudiences.find(a => a.id === activeAudienceId)}
+          activeBrandVoice={brandVoices.find(b => b.id === activeBrandVoiceId)}
+          activeEditingStyle={editingStyles.find(e => e.id === activeEditingStyleId)}
+          activeThumbnailStyle={thumbnailStyles.find(t => t.id === activeThumbnailStyleId)}
+          activeCreator={creatorReferences.find(c => c.id === activeCreatorId)}
+          sirStyleGuide={sirStyleGuide}
+          videoFormats={videoFormats}
+          hookLibrary={hookLibrary}
+        />
       )}
     </div>
   );

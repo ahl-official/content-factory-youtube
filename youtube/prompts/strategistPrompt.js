@@ -28,6 +28,10 @@ You must return only valid JSON.`,
             p += `Sir's Feedback on Strategy: ${feedback}\n\n`;
         }
 
+        if (projectContext.CreatorPlaybookRule) {
+            p += `[MANDATORY CREATOR PLAYBOOK RULE - YOUTUBE STRATEGY]:\n${projectContext.CreatorPlaybookRule}\n\n`;
+        }
+
         p += `Output required JSON fields (strings only):
 - primaryAudience: Who exactly is watching this?
 - viewerIntent: Why did they click? What is their emotional or informational state?

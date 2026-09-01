@@ -62,6 +62,13 @@ CRITICAL JSON INSTRUCTIONS:
     p += `Approved Structure:\n${JSON.stringify(structure, null, 2)}\n\n`;
     if (sirStructureFb) p += `Sir Structure Feedback:\n${sirStructureFb}\n\n`;
 
+    if (projectContext.BrandVoiceRule) p += `[MANDATORY BRAND VOICE RULE]:\n${projectContext.BrandVoiceRule}\n\n`;
+    if (projectContext.TargetAudienceRule) p += `[MANDATORY AUDIENCE RULE]:\n${projectContext.TargetAudienceRule}\n\n`;
+    if (projectContext.EditingStyleRule) p += `[MANDATORY EDITOR RULE]:\n${projectContext.EditingStyleRule}\n\n`;
+    if (projectContext._globalSirStyleGuide) p += `[SIR'S GLOBAL STYLE GUIDE]:\n${projectContext._globalSirStyleGuide}\n\n`;
+    if (projectContext._globalHookLibrary) p += `[HOOK LIBRARY EXAMPLES]:\n${JSON.stringify(projectContext._globalHookLibrary, null, 2)}\n\n`;
+
+
     if (previousOutput) {
       p += `Previous Output:\n${JSON.stringify(previousOutput, null, 2)}\n\n`;
     }

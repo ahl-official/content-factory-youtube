@@ -107,7 +107,16 @@ function CustomSelect({ value, options, onChange, style }) {
 
 const API_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api');
 
-export default function YoutubeFactory() {
+export default function YoutubeFactory({
+    activeAudience,
+    activeBrandVoice,
+    activeEditingStyle,
+    activeThumbnailStyle,
+    activeCreator,
+    videoFormats,
+    hookLibrary,
+    sirStyleGuide: globalSirStyleGuide
+}) {
     const [view, setView] = useState('dashboard');
     const [projects, setProjects] = useState([]);
     const [activeProjectId, setActiveProjectId] = useState(null);
@@ -385,7 +394,12 @@ export default function YoutubeFactory() {
                         Notes: p.notes,
                         Status: 'In Research',
                         CurrentAgent: 1,
-                        CurrentStage: 'Not Requested'
+                        CurrentStage: 'Not Requested',
+                        BrandVoiceRule: activeBrandVoice?.rules || '',
+                        TargetAudienceRule: activeAudience?.rules || '',
+                        EditingStyleRule: activeEditingStyle?.rules || '',
+                        ThumbnailStyleRule: activeThumbnailStyle?.rules || '',
+                        CreatorPlaybookRule: activeCreator?.rules || ''
                     };
                     const res = await fetch(`${API_URL}/yt/projects`, {
                         method: 'POST',
@@ -3062,7 +3076,7 @@ function YoutubeWorkspace({ project, onBack, learnFromFeedback }) {
                             )}
                         </div>
                     </div>
-                    {currentAgentRuns.length > 0 && !isApproved && (
+                    {currentAgentRuns.length > 0 && (
                         <>
                             <div style={{ padding: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.1)', display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
                                 {activeAgentId === 2 ? (

@@ -48,4 +48,4 @@ Output strictly in JSON:
  "unnecessarySections": [""],
  "finalRecommendations": [""]
 }
-Rules: Focus on audience behavior, predict boredom points, identify weak hooks and confusing sections. Do not rewrite script. Do not write edit instructions. Return ONLY valid JSON.`;
+Rules: Focus on audience behavior and identify areas that need more pacing energy. Do not rewrite script. Return ONLY valid JSON.`;

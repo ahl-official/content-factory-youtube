@@ -42,7 +42,7 @@ CRITICAL INSTRUCTIONS:
 - EVERY concept must contain EVERY required field. If a field is not strongly applicable, return a short neutral value (never omit it).`;
 
 function buildUserPrompt(projectContext, researchOut, angleOut, scriptOut, creativeDirectorOut, previousOutput, feedback) {
-    let p = `Project Context:
+  let p = `Project Context:
 Topic: ${projectContext.WorkingTitle || 'Unknown'}
 Target Audience: ${projectContext.TargetAudience || 'Unknown'}
 Business Objective: ${projectContext.BusinessObjective || 'Unknown'}
@@ -60,15 +60,19 @@ Creative Director Visual Notes (Use ONLY as visual context/inspiration):
 ${typeof creativeDirectorOut === 'object' ? JSON.stringify(creativeDirectorOut, null, 2) : creativeDirectorOut}
 `;
 
-    if (previousOutput) {
-        p += `\n\nPREVIOUS GENERATION (Your last attempt):\n${JSON.stringify(previousOutput, null, 2)}`;
-    }
-    if (feedback) {
-        p += `\n\nUSER FEEDBACK FOR REVISION:\n${feedback}\n\nIMPORTANT: Modify your concepts based heavily on this feedback!`;
-    }
+  if (projectContext.ThumbnailStyleRule) {
+    p += `\n[MANDATORY THUMBNAIL STYLE RULE]:\n${projectContext.ThumbnailStyleRule}\n`;
+  }
 
-    p += `\n\nBased on this, generate exactly 5 highly distinct thumbnail concepts to maximize CTR.`;
-    return p;
+  if (previousOutput) {
+    p += `\n\nPREVIOUS GENERATION (Your last attempt):\n${JSON.stringify(previousOutput, null, 2)}`;
+  }
+  if (feedback) {
+    p += `\n\nUSER FEEDBACK FOR REVISION:\n${feedback}\n\nIMPORTANT: Modify your concepts based heavily on this feedback!`;
+  }
+
+  p += `\n\nBased on this, generate exactly 5 highly distinct thumbnail concepts to maximize CTR.`;
+  return p;
 }
 
 module.exports = { sysPrompt, buildUserPrompt };
