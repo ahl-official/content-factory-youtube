@@ -1,14 +1,14 @@
 const aiModels = require('./aiModels');
 
 module.exports = {
-    // Huge Context Agents (Transcripts, Full Scripts) -> GEMINI
-    "1": { provider: "gemini", model: aiModels.gemini.fast },
-    "2": { provider: "gemini", model: aiModels.gemini.fast },
-    "5": { provider: "gemini", model: aiModels.gemini.fast },
-    "10": { provider: "gemini", model: aiModels.gemini.fast },
-    "11": { provider: "gemini", model: aiModels.gemini.fast },
-    "14": { provider: "gemini", model: aiModels.gemini.fast },
-    "15": { provider: "gemini", model: aiModels.gemini.fast },
+    // Huge Context Agents (Transcripts, Full Scripts) -> DEEPSEEK (Replaces Google 429 loops)
+    "1": { provider: "deepseek", model: "deepseek-chat" },
+    "2": { provider: "deepseek", model: "deepseek-chat" },
+    "5": { provider: "deepseek", model: "deepseek-chat" },
+    "10": { provider: "deepseek", model: "deepseek-chat" },
+    "11": { provider: "deepseek", model: "deepseek-chat" },
+    "14": { provider: "deepseek", model: "deepseek-chat" },
+    "15": { provider: "deepseek", model: "deepseek-chat" },
 
     // Deep Logic / Structuring Agents -> DEEPSEEK
     "3": { provider: "deepseek", model: "deepseek-chat" },
