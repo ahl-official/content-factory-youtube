@@ -6,6 +6,6 @@ module.exports = {
         transcription: 'gemini-1.5-flash'
     },
     openRouter: {
-        free: 'meta-llama/llama-3.1-8b-instruct'
+        free: 'google/gemma-4-31b-it:free'
     }
 };

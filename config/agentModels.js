@@ -15,11 +15,11 @@ module.exports = {
     "13": { provider: "deepseek", model: "deepseek-chat" },
 
     // Ultra Fast / Lightweight Creative Agents -> GROQ NATIVE
-    "6": { provider: "groq", model: "llama-3.1-8b-instant" },
-    "7": { provider: "groq", model: "llama-3.1-8b-instant" },
-    "8": { provider: "groq", model: "llama-3.1-8b-instant" },
-    "9": { provider: "groq", model: "llama-3.1-8b-instant" },
-    "10": { provider: "groq", model: "llama-3.1-8b-instant" },
-    "10.5": { provider: "groq", model: "llama-3.1-8b-instant" },
-    "11": { provider: "groq", model: "llama-3.1-8b-instant" }
+    "6": { provider: "groq", model: "qwen/qwen3.8-27b" },
+    "7": { provider: "groq", model: "qwen/qwen3.8-27b" },
+    "8": { provider: "groq", model: "qwen/qwen3.8-27b" },
+    "9": { provider: "groq", model: "qwen/qwen3.8-27b" },
+    "10": { provider: "groq", model: "qwen/qwen3.8-27b" },
+    "10.5": { provider: "groq", model: "qwen/qwen3.8-27b" },
+    "11": { provider: "groq", model: "qwen/qwen3.8-27b" }
 };
