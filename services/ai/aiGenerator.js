@@ -91,8 +91,8 @@ async function generate({ agentId, sysPrompt, userPrompt, schema, isScript = fal
 
     const temperature = ytConfig.TEMPERATURE;
 
-    // Disable silent background retries to protect 15 RPM Free limits
-    for (let attempts = 0; attempts < 1; attempts++) {
+    // Allow 1 silent background retry for formatting issues, but protect 15 RPM limit with a delay
+    for (let attempts = 0; attempts < 2; attempts++) {
         let currentProvider = 'Unknown';
         try {
             const result = await routeGeneration({
@@ -161,7 +161,9 @@ async function generate({ agentId, sysPrompt, userPrompt, schema, isScript = fal
                 throw new Error(`YouTube AI Agent generation failed structurally: ${e.message}`);
             }
 
-            // Retry for formatting failures
+            // Retry for formatting failures with a delay to protect RPM limits
+            logger.warn(`[Agent ${agentId}] Sleeping for 5 seconds before retry to protect quota.`);
+            await new Promise(r => setTimeout(r, 5000));
             sysPrompt += `\n\nERROR: Your previous response failed validation: ${e.message}. You MUST return ONLY a strictly valid flat JSON object. No pre-text.`;
         }
     }

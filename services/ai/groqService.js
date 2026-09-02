@@ -6,8 +6,8 @@ const logger = require('../../logger');
 // Groq Free Tier limits are strict (often 30 RPM, but small Context Windows ~8k)
 // Groq excels at reasoning, logic, and extreme speed (300 tokens/sec).
 const modelPools = {
-    fast: ['llama3-8b-8192', 'llama-3.1-8b-instant'],
-    reasoning: ['llama-3.1-70b-versatile', 'llama3-70b-8192'],
+    fast: ['llama-3.1-8b-instant'],
+    reasoning: ['llama-3.1-70b-versatile'],
     json: ['llama-3.1-8b-instant'] // Llama 3 handles JSON beautifully natively
 };
 

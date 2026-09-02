@@ -141,6 +141,12 @@ async function routeGeneration({ agentId, sysPrompt, userPrompt, maxTokens, temp
             err.latestProvider = provider;
             err.latestModel = model;
             lastError = err;
+
+            // Stop waterfall if the provider responded successfully but output failed format checks
+            if (isInvalidJson || isEmpty) {
+                logger.warn(`[AI Router] Stopping waterfall. Provider ${provider} responded but failed format validation. Throwing for internal retry.`);
+                throw err;
+            }
         }
     }
 
