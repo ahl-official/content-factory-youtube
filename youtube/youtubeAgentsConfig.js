@@ -6,7 +6,7 @@ module.exports = {
     YT_ALLOW_PAID_FALLBACK: false,
 
     // Limits
-    DEFAULT_MAX_TOKENS: 4000,
-    SCRIPT_MAX_TOKENS: 10000,
+    DEFAULT_MAX_TOKENS: 1500,
+    SCRIPT_MAX_TOKENS: 3500,
     TEMPERATURE: 0.7
 };
