@@ -6,7 +6,6 @@ module.exports = {
     "2": { provider: "gemini", model: aiModels.gemini.fast },
     "5": { provider: "gemini", model: aiModels.gemini.fast },
     "10": { provider: "gemini", model: aiModels.gemini.fast },
-    "10.5": { provider: "gemini", model: aiModels.gemini.fast },
     "11": { provider: "gemini", model: aiModels.gemini.fast },
     "14": { provider: "gemini", model: aiModels.gemini.fast },
     "15": { provider: "gemini", model: aiModels.gemini.fast },
@@ -21,5 +20,6 @@ module.exports = {
     "6": { provider: "groq", model: "qwen/qwen3.8-27b" },
     "7": { provider: "groq", model: "qwen/qwen3.8-27b" },
     "8": { provider: "groq", model: "qwen/qwen3.8-27b" },
-    "9": { provider: "groq", model: "qwen/qwen3.8-27b" }
+    "9": { provider: "groq", model: "qwen/qwen3.8-27b" },
+    "10.5": { provider: "groq", model: "qwen/qwen3.8-27b" }
 };
