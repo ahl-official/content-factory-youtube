@@ -106,48 +106,26 @@ async function generate({ agentId, model, sysPrompt, userPrompt, maxTokens, temp
 
     const targetPool = getModelPool(model);
 
-    // 4. Retry loop on 404
-    for (let i = 0; i < targetPool.length; i++) {
-        const currentModelId = targetPool[i];
-        logger.info(`[Gemini Service] Attempting Agent: ${agentId || 'Unknown'} dynamically with model: ${currentModelId}`);
+    const currentModelId = targetPool[0];
+    logger.info(`[Gemini Service] Attempting Agent: ${agentId || 'Unknown'} dynamically with model: ${currentModelId}`);
 
-        try {
-            const result = await executeGeminiRequest(currentModelId, sysPrompt, userPrompt, maxTokens, temperature);
-            return {
-                responseText: result.responseText,
-                finishReason: result.finishReason,
-                provider: 'gemini',
-                model: currentModelId
-            };
-        } catch (err) {
-            logger.warn(`[Gemini Service] Agent: ${agentId || 'Unknown'} Model: ${currentModelId} Failed (${err.status})`);
+    try {
+        const result = await executeGeminiRequest(currentModelId, sysPrompt, userPrompt, maxTokens, temperature);
+        return {
+            responseText: result.responseText,
+            finishReason: result.finishReason,
+            provider: 'gemini',
+            model: currentModelId
+        };
+    } catch (err) {
+        logger.warn(`[Gemini Service] Agent: ${agentId || 'Unknown'} Model: ${currentModelId} Failed (${err.status})`);
 
-            // 4. Automatically retry using next available model if 404 (deprecated/invalid) or 503 (temporarily unavailable)
-            if (err.status === 404 || err.status === 503) {
-                if (i < targetPool.length - 1) {
-                    continue; // Skip to next model
-                }
-            }
-
-            // Automatic 6-second stagger if we hit Gemini 15 RPM limit to safely wait out the window
-            if (err.status === 429) {
-                logger.warn(`[Gemini Service] Rate Limit (429) reached on Model: ${currentModelId}. Staggering 6 seconds to recover RPM bucket...`);
-                await new Promise(r => setTimeout(r, 6000));
-
-                // Allow one pure retry if we haven't exhausted the pool!
-                if (i < targetPool.length - 1) {
-                    continue;
-                }
-            }
-
-            // OpenRouter/Fallback triggered unchanged
-            if (err.status === 429 || (err.message && err.message.toLowerCase().includes('quota'))) {
-                throw new Error(`PROVIDER_ERROR: QUOTA_EXHAUSTED`);
-            }
-
-            // Exhausted pool or unrecoverable non-retryable error
-            throw new Error(`PROVIDER_ERROR: HTTP_${err.status}`);
+        if (err.status === 429 || (err.message && err.message.toLowerCase().includes('quota'))) {
+            throw new Error(`PROVIDER_ERROR: QUOTA_EXHAUSTED`);
         }
+
+        // Exhausted pool or unrecoverable non-retryable error
+        throw new Error(`PROVIDER_ERROR: HTTP_${err.status}`);
     }
 
     // 6. Graceful fallback error (handled by modelRouter to fallback to OpenRouter)

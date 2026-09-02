@@ -25,50 +25,8 @@ function recordSuccess(provider) {
 }
 
 function getRoutingSequence(primaryConfig) {
-    const now = Date.now();
-    ['gemini', 'openrouter', 'groq', 'deepseek'].forEach(prov => {
-        if (now - providerHealth[prov].lastFailureTs > 5 * 60 * 1000) {
-            providerHealth[prov].consecutiveFailures = 0;
-        }
-    });
-
-    let sequence = [];
-
-    if (primaryConfig.provider === 'gemini') {
-        sequence = [
-            { provider: 'gemini', model: primaryConfig.model },
-            { provider: 'gemini', model: aiModels.gemini.fast },
-            { provider: 'openrouter', model: aiModels.openRouter.free }
-        ];
-    } else if (primaryConfig.provider === 'groq') {
-        sequence = [
-            { provider: 'groq', model: primaryConfig.model },
-            { provider: 'gemini', model: aiModels.gemini.fast },
-            { provider: 'openrouter', model: aiModels.openRouter.free }
-        ];
-    } else if (primaryConfig.provider === 'deepseek') {
-        sequence = [
-            { provider: 'deepseek', model: primaryConfig.model },
-            { provider: 'gemini', model: aiModels.gemini.fast },
-            { provider: 'openrouter', model: aiModels.openRouter.free }
-        ];
-    } else {
-        sequence = [
-            { provider: 'openrouter', model: primaryConfig.model },
-            { provider: 'gemini', model: aiModels.gemini.default },
-            { provider: 'gemini', model: aiModels.gemini.fast }
-        ];
-    }
-
-    if (providerHealth[primaryConfig.provider].consecutiveFailures >= 3) {
-        // Move primary provider configs to the end of the line
-        const failingProv = primaryConfig.provider;
-        const healthy = sequence.filter(s => s.provider !== failingProv);
-        const failing = sequence.filter(s => s.provider === failingProv);
-        sequence = [...healthy, ...failing];
-    }
-
-    return sequence;
+    // Alternative 1: Strict 1-to-1 Routing (No Fallsbacks)
+    return [{ provider: primaryConfig.provider, model: primaryConfig.model }];
 }
 
 async function routeGeneration({ agentId, sysPrompt, userPrompt, maxTokens, temperature, attempts, validateFn }) {
