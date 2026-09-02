@@ -10,11 +10,11 @@ module.exports = {
     "14": { provider: "gemini", model: aiModels.gemini.fast },
     "15": { provider: "gemini", model: aiModels.gemini.fast },
 
-    // Deep Logic / Structuring Agents -> DEEPSEEK
-    "3": { provider: "deepseek", model: "deepseek-chat" },
-    "4": { provider: "deepseek", model: "deepseek-chat" },
-    "12": { provider: "deepseek", model: "deepseek-chat" },
-    "13": { provider: "deepseek", model: "deepseek-chat" },
+    // Deep Logic / Structuring Agents -> OPENROUTER (100% Free Model)
+    "3": { provider: "openrouter", model: aiModels.openRouter.free },
+    "4": { provider: "openrouter", model: aiModels.openRouter.free },
+    "12": { provider: "openrouter", model: aiModels.openRouter.free },
+    "13": { provider: "openrouter", model: aiModels.openRouter.free },
 
     // Ultra Fast / Lightweight Creative Agents -> GROQ NATIVE
     "6": { provider: "groq", model: "qwen/qwen3.8-27b" },
