@@ -124,6 +124,8 @@ async function runAnalyticsAgent(project, analyticsUrl, scriptOutput, thumbnailC
         .replace('{{title}}', titleStr)
         .replace('{{userFeedback}}', feedback || '');
 
+    prompt += '\n\nIMPORTANT: Return ONLY a raw, flat JSON object. Do not wrap it in ```json blocks or include any preamble text. Follow the exact schema required.';
+
     let lastError = null;
 
     for (let attempts = 1; attempts <= 3; attempts++) {
@@ -147,6 +149,12 @@ async function runAnalyticsAgent(project, analyticsUrl, scriptOutput, thumbnailC
         } catch (e) {
             lastError = e;
             console.warn(`Analytics attempt ${attempts} failed:`, e.message);
+
+            if (e.message.includes('429') || e.message.includes('Quota')) {
+                console.error('Rate limit reached. Aborting retries.');
+                throw e; // Do NOT retry on rate limits
+            }
+
             if (attempts === 1) {
                 prompt += `\n\nYour previous JSON was invalid. Missing or incorrect fields:\n${e.message}\n\nReturn the COMPLETE JSON object again. Do not omit any required key.`;
             } else if (attempts === 2) {

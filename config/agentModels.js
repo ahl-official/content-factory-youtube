@@ -8,7 +8,7 @@ module.exports = {
     "10": { provider: "gemini", model: aiModels.gemini.fast },
     "11": { provider: "gemini", model: aiModels.gemini.fast },
     "14": { provider: "gemini", model: aiModels.gemini.fast },
-    "15": { provider: "openrouter", model: aiModels.openRouter.free },
+    "15": { provider: "groq", model: "qwen/qwen3.8-27b" },
 
     // Deep Logic / Structuring Agents -> OPENROUTER (100% Free Model)
     "3": { provider: "openrouter", model: aiModels.openRouter.free },
