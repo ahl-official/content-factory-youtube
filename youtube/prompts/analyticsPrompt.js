@@ -18,11 +18,9 @@ Output strictly in JSON:
 {
  "performanceSummary": "",
  "metricsAnalysis": {
-  "ctr": "",
   "retention": "",
   "watchTime": "",
-  "subscriberImpact": "",
-  "leadImpact": ""
+  "subscriberImpact": ""
  },
  "retentionIssues": [
   {

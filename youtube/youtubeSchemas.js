@@ -351,11 +351,9 @@ const qcSchema = z.object({
 const analyticsSchema = z.object({
     performanceSummary: z.string(),
     metricsAnalysis: z.object({
-        ctr: z.string(),
         retention: z.string(),
         watchTime: z.string(),
-        subscriberImpact: z.string(),
-        leadImpact: z.string()
+        subscriberImpact: z.string()
     }),
     retentionIssues: z.array(z.object({
         timestamp: z.string(),
