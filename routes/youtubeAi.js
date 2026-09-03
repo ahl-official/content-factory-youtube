@@ -870,9 +870,8 @@ reviewAgents.forEach(agent => {
             } else if (agent.id === 14) {
                 output = await agent.runner(project, scriptOut, prodPlan, thumbConcept, finalTitle, seoPackage, editorPlan, retentionReview, brandReview, feedback);
             } else if (agent.id === 15) {
-                // we mock analyticsData for now just to connect the pipeline
-                const analyticsData = { views: "waiting", watchTime: "waiting", ctr: "waiting" };
-                output = await agent.runner(project, analyticsData, scriptOut, thumbConcept, finalTitle, feedback);
+                const analyticsUrl = req.body.analyticsUrl || null;
+                output = await agent.runner(project, analyticsUrl, scriptOut, thumbConcept, finalTitle, feedback);
             }
 
             const agentRuns = allRuns.filter(r => r.AgentKey === agent.key);
@@ -883,7 +882,7 @@ reviewAgents.forEach(agent => {
                 AgentKey: agent.key,
                 AgentName: agent.name,
                 Version: version,
-                InputData: { runDate: new Date().toISOString() },
+                InputData: { runDate: new Date().toISOString(), analyticsUrl: req.body.analyticsUrl || null },
                 OutputData: output,
                 Status: 'Generated',
                 IsApproved: false
