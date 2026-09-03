@@ -3,6 +3,9 @@ const { JWT } = require('google-auth-library');
 const logger = require('../logger');
 const config = require('../config');
 
+const DB_CACHE = {};
+const TTL_MS = 15000;
+
 let docInitPromise = null;
 
 async function getDoc() {
@@ -22,6 +25,49 @@ async function getDoc() {
             });
             const doc = new GoogleSpreadsheet(process.env.YT_SHEET_ID, serviceAccountAuth);
             await doc.loadInfo();
+
+            // --- RAM CACHE & WRITE-THROUGH WRAPPER ---
+            for (const title of Object.keys(doc.sheetsByTitle)) {
+                const sheet = doc.sheetsByTitle[title];
+
+                // Track AddRow writes
+                const originalAddRow = sheet.addRow.bind(sheet);
+                sheet.addRow = async function (...args) {
+                    const res = await originalAddRow(...args);
+                    delete DB_CACHE[title]; // Invalidate cache on write
+                    return res;
+                };
+
+                // Track GetRows reads
+                const originalGetRows = sheet.getRows.bind(sheet);
+                sheet.getRows = async function (options) {
+                    const now = Date.now();
+                    // Serve from fast RAM cache if under 15 seconds
+                    if (DB_CACHE[title] && (now - DB_CACHE[title].timestamp < TTL_MS) && !options) {
+                        return DB_CACHE[title].rows; // CACHE HIT
+                    }
+
+                    // CACHE MISS - Fetch fresh from Google
+                    const rows = await originalGetRows(options);
+
+                    // Track Row.save writes 
+                    for (const row of rows) {
+                        if (!row._isPatchedForCache) {
+                            const originalSave = row.save.bind(row);
+                            row.save = async function (...args) {
+                                const res = await originalSave(...args);
+                                delete DB_CACHE[title]; // Invalidate cache on write
+                                return res;
+                            };
+                            row._isPatchedForCache = true;
+                        }
+                    }
+
+                    DB_CACHE[title] = { timestamp: now, rows };
+                    return rows;
+                };
+            }
+
             return doc;
         } catch (e) {
             logger.error({ err: e }, "Failed to init YouTube Google Sheets DB");
