@@ -37,7 +37,7 @@ test_*.js
 tests/
 
 # Local memory/cache
-memory/
+/memory/
 
 # Archives
 *.tar.gz
