@@ -2,7 +2,7 @@ const config = require('../../config');
 const ytConfig = require('../../youtube/youtubeAgentsConfig');
 
 async function generate({ model, sysPrompt, userPrompt, maxTokens, temperature, attempts }) {
-    const apiKey = process.env.OPENROUTER_API_KEY || config.OPENROUTER_API_KEY;
+    const apiKey = process.env.OPENROUTER_API_KEY_YT || process.env.OPENROUTER_API_KEY || config.OPENROUTER_API_KEY;
     if (!apiKey) throw new Error('OpenRouter API key is missing');
 
     const fetch = (await import('node-fetch')).default;
