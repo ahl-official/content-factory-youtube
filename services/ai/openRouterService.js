@@ -2,8 +2,8 @@ const config = require('../../config');
 const ytConfig = require('../../youtube/youtubeAgentsConfig');
 
 async function generate({ model, sysPrompt, userPrompt, maxTokens, temperature, attempts }) {
-    const apiKey = process.env.OPENROUTER_API_KEY_YT || process.env.OPENROUTER_API_KEY || config.OPENROUTER_API_KEY;
-    if (!apiKey) throw new Error('OpenRouter API key is missing');
+    const apiKey = process.env.OPENROUTER_API_KEY_YT;
+    if (!apiKey) throw new Error('YouTube OpenRouter API key (OPENROUTER_API_KEY_YT) is missing. Set it in .env');
 
     const fetch = (await import('node-fetch')).default;
     const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {

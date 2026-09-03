@@ -42,8 +42,8 @@ async function runOpenRouter(sysPrompt, userPrompt, schema, isScript = false) {
     if (ytConfig.YT_AI_PROVIDER !== 'openrouter') throw new Error('Only OpenRouter is supported in Phase 3A');
     if (process.env.AI_MODE === 'development') throw new Error("AI_MODE=development is enabled. Switch to AI_MODE=production to generate new outputs.");
 
-    const apiKey = process.env.OPENROUTER_API_KEY_YT || process.env.OPENROUTER_API_KEY || config.OPENROUTER_API_KEY;
-    if (!apiKey) throw new Error('OpenRouter API key is missing');
+    const apiKey = process.env.OPENROUTER_API_KEY_YT;
+    if (!apiKey) throw new Error('YouTube OpenRouter API key (OPENROUTER_API_KEY_YT) is missing. Set it in .env');
     const model = process.env.YT_AI_MODEL || ytConfig.YT_AI_MODEL || 'openrouter/free';
 
     let maxTokens = isScript ? ytConfig.SCRIPT_MAX_TOKENS : ytConfig.DEFAULT_MAX_TOKENS;
