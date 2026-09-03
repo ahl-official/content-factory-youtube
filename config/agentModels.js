@@ -1,25 +1,25 @@
 const aiModels = require('./aiModels');
 
 module.exports = {
-    // Huge Context Agents (Transcripts, Full Scripts) -> GEMINI
-    "1": { provider: "gemini", model: aiModels.gemini.fast },
-    "2": { provider: "gemini", model: aiModels.gemini.fast },
-    "5": { provider: "gemini", model: aiModels.gemini.fast },
-    "10": { provider: "gemini", model: aiModels.gemini.fast },
-    "11": { provider: "gemini", model: aiModels.gemini.fast },
-    "14": { provider: "gemini", model: aiModels.gemini.fast },
-    "15": { provider: "groq", model: "qwen/qwen3.8-27b" },
+    // 🧠 MASSIVE CONTEXT AGENTS: Keep on Gemini (Free 1-Million Tokens)
+    "1": { provider: "gemini", model: aiModels.gemini.fast }, // Research
+    "2": { provider: "gemini", model: aiModels.gemini.fast }, // Angles
+    "5": { provider: "gemini", model: aiModels.gemini.fast }, // Script Writer
+    "10": { provider: "gemini", model: aiModels.gemini.fast }, // Retention
+    "11": { provider: "gemini", model: aiModels.gemini.fast }, // Brand
+    "14": { provider: "gemini", model: aiModels.gemini.fast }, // QC
 
-    // Deep Logic / Structuring Agents -> OPENROUTER (100% Free Model)
-    "3": { provider: "openrouter", model: aiModels.openRouter.free },
-    "4": { provider: "openrouter", model: aiModels.openRouter.free },
-    "12": { provider: "openrouter", model: aiModels.openRouter.free },
-    "13": { provider: "openrouter", model: aiModels.openRouter.free },
+    // ♟️ DEEP STRATEGY AGENTS: OpenRouter (GPT-4o-Mini - Highly smart, $0.15/1M Tokens)
+    "3": { provider: "openrouter", model: aiModels.openRouter.smartLogic }, // Strategist
+    "4": { provider: "openrouter", model: aiModels.openRouter.smartLogic }, // Structure Architect
+    "12": { provider: "openrouter", model: aiModels.openRouter.smartLogic }, // Edit Plan
+    "13": { provider: "openrouter", model: aiModels.openRouter.smartLogic }, // Title Generation Deep Logic
 
-    // Ultra Fast / Lightweight Creative Agents -> GROQ NATIVE
-    "6": { provider: "groq", model: "qwen/qwen3.8-27b" },
-    "7": { provider: "groq", model: "qwen/qwen3.8-27b" },
-    "8": { provider: "groq", model: "qwen/qwen3.8-27b" },
-    "9": { provider: "groq", model: "qwen/qwen3.8-27b" },
-    "10.5": { provider: "groq", model: "qwen/qwen3.8-27b" }
+    // 🎨 FAST CREATIVE / JSON AGENTS: OpenRouter (Llama 8B - High speed, $0.06/1M Tokens)
+    "6": { provider: "openrouter", model: aiModels.openRouter.creativeCheap }, // Concept
+    "7": { provider: "openrouter", model: aiModels.openRouter.creativeCheap }, // Thumbnail Design
+    "8": { provider: "openrouter", model: aiModels.openRouter.creativeCheap }, // Titles
+    "9": { provider: "openrouter", model: aiModels.openRouter.smartLogic },    // SEO (Needs smart JSON logic)
+    "10.5": { provider: "openrouter", model: aiModels.openRouter.creativeCheap }, // Creative iteration
+    "15": { provider: "openrouter", model: aiModels.openRouter.creativeCheap } // Analytics
 };
