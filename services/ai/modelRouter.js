@@ -25,8 +25,17 @@ function recordSuccess(provider) {
 }
 
 function getRoutingSequence(primaryConfig) {
-    // Alternative 1: Strict 1-to-1 Routing (No Fallsbacks)
-    return [{ provider: primaryConfig.provider, model: primaryConfig.model }];
+    const sequence = [{ provider: primaryConfig.provider, model: primaryConfig.model }];
+
+    // Fallback Checkpoint: If Gemini (or Groq) fails due to Rate Limits, fallback to OpenRouter's GPT-4o-Mini
+    if (primaryConfig.provider !== 'openrouter') {
+        sequence.push({
+            provider: 'openrouter',
+            model: aiModels.openRouter.smartLogic
+        });
+    }
+
+    return sequence;
 }
 
 async function routeGeneration({ agentId, sysPrompt, userPrompt, maxTokens, temperature, attempts, validateFn }) {
