@@ -8,6 +8,6 @@ module.exports = {
     openRouter: {
         free: 'google/gemma-4-31b-it:free',
         creativeCheap: 'meta-llama/llama-3.1-8b-instruct',
-        smartLogic: 'openai/gpt-4o-mini'
+        smartLogic: 'deepseek/deepseek-chat'
     }
 };
