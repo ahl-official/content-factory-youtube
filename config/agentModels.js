@@ -18,10 +18,10 @@ module.exports = {
     "13": { provider: "openrouter", model: aiModels.openRouter.smartLogic }, // Title Generation Deep Logic
 
     // 🎨 FAST CREATIVE / JSON AGENTS: OpenRouter (Llama 8B - High speed, $0.06/1M Tokens)
-    "6": { provider: "openrouter", model: aiModels.openRouter.creativeCheap }, // Concept
-    "7": { provider: "openrouter", model: aiModels.openRouter.creativeCheap }, // Thumbnail Design
-    "8": { provider: "openrouter", model: aiModels.openRouter.creativeCheap }, // Titles
+    "6": { provider: "openrouter", model: aiModels.openRouter.smartLogic }, // Concept
+    "7": { provider: "openrouter", model: aiModels.openRouter.smartLogic }, // Thumbnail strategist
+    "8": { provider: "openrouter", model: aiModels.openRouter.smartLogic }, // thumbnail Designer
     "9": { provider: "openrouter", model: aiModels.openRouter.smartLogic },    // SEO (Needs smart JSON logic)
-    "10.5": { provider: "openrouter", model: aiModels.openRouter.creativeCheap }, // Creative iteration
-    "15": { provider: "openrouter", model: aiModels.openRouter.creativeCheap } // Analytics
+    "10.5": { provider: "openrouter", model: aiModels.openRouter.smartLogic }, // Creative iteration
+    "15": { provider: "openrouter", model: aiModels.openRouter.smartLogic } // Analytics
 };
