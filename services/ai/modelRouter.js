@@ -27,8 +27,22 @@ function recordSuccess(provider) {
 function getRoutingSequence(primaryConfig) {
     const sequence = [{ provider: primaryConfig.provider, model: primaryConfig.model }];
 
-    // Fallback Checkpoint: If Gemini (or Groq) fails due to Rate Limits, fallback to OpenRouter's GPT-4o-Mini
-    if (primaryConfig.provider !== 'openrouter') {
+    if (primaryConfig.provider === 'gemini') {
+        // Check #2: If the primary Gemini model fails, fallback to Gemini Heavy
+        if (primaryConfig.model !== aiModels.gemini.heavy) {
+            sequence.push({
+                provider: 'gemini',
+                model: aiModels.gemini.heavy
+            });
+        }
+
+        // Check #3: If Gemini Heavy fails, fallback to OpenRouter SmartLogic
+        sequence.push({
+            provider: 'openrouter',
+            model: aiModels.openRouter.smartLogic
+        });
+    } else if (primaryConfig.provider !== 'openrouter') {
+        // Generic fallback for any other provider
         sequence.push({
             provider: 'openrouter',
             model: aiModels.openRouter.smartLogic
