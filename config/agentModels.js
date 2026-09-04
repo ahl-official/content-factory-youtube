@@ -5,9 +5,11 @@ module.exports = {
     "1": { provider: "gemini", model: aiModels.gemini.fast }, // Research
     "2": { provider: "gemini", model: aiModels.gemini.fast }, // Angles
     "5": { provider: "gemini", model: aiModels.gemini.fast }, // Script Writer
-    "10": { provider: "gemini", model: aiModels.gemini.fast }, // Retention
-    "11": { provider: "gemini", model: aiModels.gemini.fast }, // Brand
-    "14": { provider: "gemini", model: aiModels.gemini.fast }, // QC
+
+    // 🎓 LATE-STAGE PRODUCTION / QC: Moved to OpenRouter logic
+    "10": { provider: "openrouter", model: aiModels.openRouter.smartLogic }, // SEO
+    "11": { provider: "openrouter", model: aiModels.openRouter.smartLogic }, // Editor 
+    "14": { provider: "openrouter", model: aiModels.openRouter.smartLogic }, // QC
 
     // ♟️ DEEP STRATEGY AGENTS: OpenRouter (GPT-4o-Mini - Highly smart, $0.15/1M Tokens)
     "3": { provider: "openrouter", model: aiModels.openRouter.smartLogic }, // Strategist
