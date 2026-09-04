@@ -485,7 +485,11 @@ async function upsertAgentArtifact(options) {
 
     // Deep Flatten outputJson into ultra-readable columns
     let flatOutput = {};
-    if (outputJson && typeof outputJson === 'object') {
+    let parsedOutput = outputJson;
+    if (typeof parsedOutput === 'string') {
+        try { parsedOutput = JSON.parse(parsedOutput); } catch (e) { }
+    }
+    if (parsedOutput && typeof parsedOutput === 'object') {
         const flattenDeep = (obj, prefix = '') => {
             let res = {};
             for (const k in obj) {
@@ -501,7 +505,7 @@ async function upsertAgentArtifact(options) {
             }
             return res;
         };
-        flatOutput = flattenDeep(outputJson);
+        flatOutput = flattenDeep(parsedOutput);
     }
 
     // Ensure headers exist

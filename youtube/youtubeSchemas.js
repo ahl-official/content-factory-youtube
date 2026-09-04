@@ -370,7 +370,15 @@ const metadataSchema = z.object({
     uploadMetadata: z.object({
         title: z.string(),
         description: z.string(),
-        chapters: z.array(z.string()),
+        chapters: z.array(
+            z.union([
+                z.string(),
+                z.object({
+                    timestamp: z.string().optional(),
+                    title: z.string().optional()
+                })
+            ])
+        ),
         tags: z.array(z.string()),
         hashtags: z.array(z.string()),
         category: z.string(),
@@ -387,7 +395,7 @@ const metadataSchema = z.object({
     }),
     publishingRecommendations: z.object({
         endScreenSuggestion: z.string(),
-        cardPlacement: z.array(z.string()),
+        cardPlacement: z.union([z.array(z.string()), z.string()]),
         relatedVideos: z.array(z.string()),
         playlistRecommendation: z.string()
     }),
