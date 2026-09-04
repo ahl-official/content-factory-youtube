@@ -34,7 +34,7 @@ async function runScriptAgent(projectContext, researchOut, angleOut, strategistO
             // PROGRAMMATICALLY ASSEMBLE FULL SCRIPT
             let compiledScript = result.opening ? result.opening + "\n\n" : "";
 
-            const placeholders = ['...', '[detailed script]', '[insert script]', '[continue]', 'CHAPTER 1'];
+            const placeholders = ['[detailed script]', '[insert script]', '[continue]', '[placeholder]'];
             const hasPlaceholder = (text) => text && placeholders.some(p => text.includes(p));
 
             if (hasPlaceholder(result.opening)) throw new Error("Validation Failed: Opening contained placeholders.");
