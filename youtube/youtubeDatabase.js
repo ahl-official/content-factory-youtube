@@ -59,6 +59,14 @@ async function getDoc() {
                                 delete DB_CACHE[title]; // Invalidate cache on write
                                 return res;
                             };
+
+                            const originalDelete = row.delete.bind(row);
+                            row.delete = async function (...args) {
+                                const res = await originalDelete(...args);
+                                delete DB_CACHE[title]; // Invalidate cache on delete
+                                return res;
+                            };
+
                             row._isPatchedForCache = true;
                         }
                     }
@@ -246,6 +254,31 @@ async function updateProject(projectId, updates) {
         return formatRow(rows[index]);
     }
     return null;
+}
+
+async function deleteProject(projectId) {
+    const d = await getDoc();
+    if (!d) return false;
+
+    // Delete from Projects
+    const sheet = d.sheetsByTitle[TABS.PROJECTS];
+    const rows = await sheet.getRows();
+    const index = rows.findIndex(r => r.get('ProjectID') === projectId);
+    if (index >= 0) {
+        await rows[index].delete();
+    }
+
+    // Delete from Pipeline Artifacts
+    const runsSheet = d.sheetsByTitle[TABS.PIPELINE];
+    if (runsSheet) {
+        const runs = await runsSheet.getRows();
+        for (const r of runs) {
+            if (r.get('ProjectID') === projectId) {
+                await r.delete();
+            }
+        }
+    }
+    return true;
 }
 
 async function createAgentRun(runData) {
@@ -794,6 +827,7 @@ module.exports = {
     getProject,
     createProject,
     updateProject,
+    deleteProject,
     getNextProjectId,
     createAgentRun,
     getAgentRuns,

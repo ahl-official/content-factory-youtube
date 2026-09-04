@@ -387,7 +387,13 @@ export default function YoutubeFactory({
                 <button className={`btn ${view === 'hooks' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('hooks')}>🪝 Hook Library</button>
             </div>
 
-            {view === 'dashboard' && <YoutubeDashboard projects={projects} onOpen={(id) => { setActiveProjectId(id); setView('workspace'); }} />}
+            {view === 'dashboard' && <YoutubeDashboard projects={projects} onDelete={async (id) => {
+                if (window.confirm('Are you absolutely sure you want to delete this specific project? This cannot be undone.')) {
+                    await fetch(`${API_URL}/yt/projects/${id}`, { method: 'DELETE' });
+                    setProjects(projects.filter(p => p.id !== id));
+                    if (activeProjectId === id) setView('dashboard');
+                }
+            }} onOpen={(id) => { setActiveProjectId(id); setView('workspace'); }} />}
             {view === 'settings' && <YoutubeSettings />}
             {view === 'guide' && <StyleGuideView guide={sirStyleGuide} onUpdate={setSirStyleGuide} />}
             {view === 'creators' && <CreatorPlaybookView creatorReferences={creatorReferences} setCreatorReferences={setCreatorReferences} activeCreatorId={activeCreatorId} setActiveCreatorId={setActiveCreatorId} />}
@@ -497,7 +503,7 @@ class WorkspaceErrorBoundary extends Component {
 // ─────────────────────────────────────────────────────────────────────────────
 // DASHBOARD VIEW
 // ─────────────────────────────────────────────────────────────────────────────
-function YoutubeDashboard({ projects, onOpen }) {
+function YoutubeDashboard({ projects, onOpen, onDelete }) {
     const [search, setSearch] = useState('');
     const [filter, setFilter] = useState('All Status');
     const [activeTab, setActiveTab] = useState('All Projects');
@@ -530,7 +536,7 @@ function YoutubeDashboard({ projects, onOpen }) {
         const mappedFilter = filter === 'All Status' ? 'All' : filter;
         const disp = getDisplayStatus(p);
         const matchesTab = activeTab === 'All Projects' || getProjectPhase(p) === activeTab;
-        return mSearch && (mappedFilter === 'All' || disp.includes(mappedFilter)) && matchesTab;
+        return mSearch && (mappedFilter === 'All' || disp === mappedFilter) && matchesTab;
     });
 
     const counts = {};
@@ -538,6 +544,9 @@ function YoutubeDashboard({ projects, onOpen }) {
         if (tab.id === 'All Projects') counts[tab.id] = projects.length;
         else counts[tab.id] = projects.filter(p => getProjectPhase(p) === tab.id).length;
     });
+
+    const uniqueStatuses = Array.from(new Set(projects.map(p => getDisplayStatus(p))));
+    const filterOptions = ['All Status', ...uniqueStatuses.sort()];
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
@@ -586,7 +595,7 @@ function YoutubeDashboard({ projects, onOpen }) {
                 <CustomSelect
                     value={filter}
                     onChange={setFilter}
-                    options={['All Status', 'In Research', 'Waiting for Sir', 'Script Review', 'Editing', 'Published']}
+                    options={filterOptions}
                     style={{ width: '220px' }}
                 />
             </div>
@@ -636,7 +645,10 @@ function YoutubeDashboard({ projects, onOpen }) {
                                 <div style={{ width: `${(p.progress / 15) * 100}%`, background: pColor, height: '100%' }}></div>
                             </div>
 
-                            <button className="yt-btn-secondary" onClick={() => onOpen(p.id)} style={{ width: '100%', marginTop: 'auto' }}>Continue →</button>
+                            <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto' }}>
+                                <button className="yt-btn-secondary" onClick={() => onOpen(p.id)} style={{ flex: 1 }}>Continue →</button>
+                                <button className="yt-btn-secondary" onClick={(e) => { e.stopPropagation(); onDelete(p.id); }} style={{ padding: '0 0.8rem', color: '#f87171', borderColor: 'rgba(248,113,113,0.3)', minWidth: '40px' }} title="Delete Project">🗑️</button>
+                            </div>
                         </div>
                     );
                 })}

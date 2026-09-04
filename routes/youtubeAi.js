@@ -152,6 +152,20 @@ router.get('/dev/test-provider/:provider', async (req, res) => {
     }
 });
 
+// DELETE /api/yt/projects/:id
+router.delete('/projects/:id', async (req, res) => {
+    try {
+        const success = await ytDb.deleteProject(req.params.id);
+        if (!success) {
+            return res.status(404).json({ error: 'Project not found or unable to delete' });
+        }
+        res.json({ success: true });
+    } catch (err) {
+        logger.error({ err }, `Failed to delete project ${req.params.id}`);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Validate Agent Keys
 router.all('/projects/:id/agents/:agentKey/*', (req, res, next) => {
     const { agentKey } = req.params;
