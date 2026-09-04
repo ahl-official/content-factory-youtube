@@ -128,6 +128,12 @@ async function routeGeneration({ agentId, sysPrompt, userPrompt, maxTokens, temp
                 logger.warn(`[AI Router] Stopping waterfall. Provider ${provider} responded but failed format validation. Throwing for internal retry.`);
                 throw err;
             }
+
+            // ADDED: Security check to prevent automated API bans
+            if (i < sequence.length - 1) {
+                logger.warn(`[AI Router] Applying 2-second safe delay before contacting next fallback provider to prevent API spam bans.`);
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
         }
     }
 
