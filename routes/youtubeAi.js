@@ -971,6 +971,7 @@ router.post('/projects/:id/agents/:agentKey/approve', async (req, res) => {
                 projectId: req.params.id,
                 agentId: 6,
                 version: targetRun.Version,
+                outputJson: targetRun.OutputData,
                 status: 'Approved'
             });
         } else if (agentKey === AGENT_KEYS.THUMBNAIL_STRATEGIST) {
@@ -1000,6 +1001,7 @@ router.post('/projects/:id/agents/:agentKey/approve', async (req, res) => {
                 projectId: req.params.id,
                 agentId: 8,
                 version: targetRun.Version,
+                outputJson: targetRun.OutputData,
                 status: 'Approved'
             });
         } else if (agentKey === AGENT_KEYS.TITLE_STRATEGIST) {
@@ -1029,6 +1031,7 @@ router.post('/projects/:id/agents/:agentKey/approve', async (req, res) => {
                 projectId: req.params.id,
                 agentId: 10,
                 version: targetRun.Version,
+                outputJson: targetRun.OutputData,
                 status: 'Approved'
             });
         } else if (agentKey === AGENT_KEYS.EDITOR) {
@@ -1038,20 +1041,21 @@ router.post('/projects/:id/agents/:agentKey/approve', async (req, res) => {
                 projectId: req.params.id,
                 agentId: 11,
                 version: targetRun.Version,
+                outputJson: targetRun.OutputData,
                 status: 'Approved'
             });
         } else if (agentKey === AGENT_KEYS.RETENTION) {
             await ytDb.updateProject(req.params.id, { CurrentStage: 'Brand Review Preparation', Progress: '12', CurrentAgent: 13 });
-            await ytDb.upsertAgentArtifact({ sheetName: 'YT_RetentionReview', projectId: req.params.id, agentId: 12, version: targetRun.Version, status: 'Approved' });
+            await ytDb.upsertAgentArtifact({ sheetName: 'YT_RetentionReview', projectId: req.params.id, agentId: 12, version: targetRun.Version, outputJson: targetRun.OutputData, status: 'Approved' });
         } else if (agentKey === AGENT_KEYS.BRAND) {
             await ytDb.updateProject(req.params.id, { CurrentStage: 'Final QC Preparation', Progress: '13', CurrentAgent: 14 });
-            await ytDb.upsertAgentArtifact({ sheetName: 'YT_BrandReview', projectId: req.params.id, agentId: 13, version: targetRun.Version, status: 'Approved' });
+            await ytDb.upsertAgentArtifact({ sheetName: 'YT_BrandReview', projectId: req.params.id, agentId: 13, version: targetRun.Version, outputJson: targetRun.OutputData, status: 'Approved' });
         } else if (agentKey === AGENT_KEYS.QC) {
             await ytDb.updateProject(req.params.id, { CurrentStage: 'Analytics Pipeline', Progress: '14', CurrentAgent: 15 });
-            await ytDb.upsertAgentArtifact({ sheetName: 'YT_QCReview', projectId: req.params.id, agentId: 14, version: targetRun.Version, status: 'Approved' });
+            await ytDb.upsertAgentArtifact({ sheetName: 'YT_QCReview', projectId: req.params.id, agentId: 14, version: targetRun.Version, outputJson: targetRun.OutputData, status: 'Approved' });
         } else if (agentKey === AGENT_KEYS.ANALYTICS) {
             await ytDb.updateProject(req.params.id, { CurrentStage: 'Project Completed', Progress: '15', CurrentAgent: 15 });
-            await ytDb.upsertAgentArtifact({ sheetName: 'YT_Analytics', projectId: req.params.id, agentId: 15, version: targetRun.Version, status: 'Approved' });
+            await ytDb.upsertAgentArtifact({ sheetName: 'YT_Analytics', projectId: req.params.id, agentId: 15, version: targetRun.Version, outputJson: targetRun.OutputData, status: 'Approved' });
         }
 
         res.json({ success: true });
