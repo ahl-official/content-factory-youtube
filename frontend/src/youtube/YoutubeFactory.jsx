@@ -390,7 +390,7 @@ export default function YoutubeFactory({
             {view === 'dashboard' && <YoutubeDashboard projects={projects} onDelete={async (id) => {
                 if (window.confirm('Are you absolutely sure you want to delete this specific project? This cannot be undone.')) {
                     await fetch(`${API_URL}/yt/projects/${id}`, { method: 'DELETE' });
-                    setProjects(projects.filter(p => p.id !== id));
+                    setProjects(projects.filter(p => p.projectId !== id));
                     if (activeProjectId === id) setView('dashboard');
                 }
             }} onOpen={(id) => { setActiveProjectId(id); setView('workspace'); }} />}
@@ -647,7 +647,7 @@ function YoutubeDashboard({ projects, onOpen, onDelete }) {
 
                             <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto' }}>
                                 <button className="yt-btn-secondary" onClick={() => onOpen(p.id)} style={{ flex: 1 }}>Continue →</button>
-                                <button className="yt-btn-secondary" onClick={(e) => { e.stopPropagation(); onDelete(p.id); }} style={{ padding: '0 0.8rem', color: '#f87171', borderColor: 'rgba(248,113,113,0.3)', minWidth: '40px' }} title="Delete Project">🗑️</button>
+                                <button className="yt-btn-secondary" onClick={(e) => { e.stopPropagation(); onDelete(p.projectId); }} style={{ padding: '0 0.8rem', color: '#f87171', borderColor: 'rgba(248,113,113,0.3)', minWidth: '40px' }} title="Delete Project">🗑️</button>
                             </div>
                         </div>
                     );
