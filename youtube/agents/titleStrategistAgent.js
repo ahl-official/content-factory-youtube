@@ -3,7 +3,16 @@ const { titleStrategistSchema } = require('../youtubeSchemas');
 const promptGen = require('../prompts/titleStrategistPrompt');
 
 async function runTitleStrategistAgent(projectContext, researchOut, strategistOut, thumbnailConcept, feedback = null, previousOutput = null) {
-    const sysPrompt = promptGen.sysPrompt;
+    let sysPrompt = promptGen.sysPrompt;
+
+    let engineEnforcements = [];
+    if (projectContext.BrandVoiceRule) engineEnforcements.push(`[MANDATORY BRAND TONE]: ${projectContext.BrandVoiceRule}`);
+    if (projectContext.TargetAudienceRule) engineEnforcements.push(`[MANDATORY AUDIENCE RULE]: ${projectContext.TargetAudienceRule}`);
+    if (projectContext.CreatorPlaybookRule) engineEnforcements.push(`[CREATOR MODELING (TITLES)]: ${projectContext.CreatorPlaybookRule}`);
+
+    if (engineEnforcements.length > 0) {
+        sysPrompt += `\n\n=== EXTREMELY CRITICAL PROJECT RULES ===\nYou MUST strictly follow these foundational rules for this specific project:\n${engineEnforcements.join('\n\n')}\n========================================\n`;
+    }
     let userPrompt = promptGen.buildUserPrompt(projectContext, researchOut, strategistOut, thumbnailConcept, feedback);
 
     const passThroughSchema = {

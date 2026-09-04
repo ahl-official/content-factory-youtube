@@ -3,7 +3,18 @@ const { thumbnailStrategistSchema } = require('../youtubeSchemas');
 const promptGen = require('../prompts/thumbnailStrategistPrompt');
 
 async function runThumbnailStrategistAgent(projectContext, researchOut, angleOut, scriptOut, creativeDirectorOut, feedback = null, previousOutput = null) {
-    const sysPrompt = promptGen.sysPrompt;
+    let sysPrompt = promptGen.sysPrompt;
+
+    let engineEnforcements = [];
+    if (projectContext.BrandVoiceRule) engineEnforcements.push(`[MANDATORY BRAND TONE]: ${projectContext.BrandVoiceRule}`);
+    if (projectContext.ThumbnailStyleRule) engineEnforcements.push(`[MANDATORY THUMBNAIL/VISUAL STYLE]: ${projectContext.ThumbnailStyleRule}`);
+    if (projectContext.TargetAudienceRule) engineEnforcements.push(`[MANDATORY AUDIENCE RULE]: ${projectContext.TargetAudienceRule}`);
+    if (projectContext.CreatorPlaybookRule) engineEnforcements.push(`[CREATOR MODELING (THUMBNAIL)]: ${projectContext.CreatorPlaybookRule}`);
+
+    if (engineEnforcements.length > 0) {
+        sysPrompt += `\n\n=== EXTREMELY CRITICAL PROJECT RULES ===\nYou MUST strictly follow these foundational rules for this specific project:\n${engineEnforcements.join('\n\n')}\n========================================\n`;
+    }
+
     let userPrompt = promptGen.buildUserPrompt(projectContext, researchOut, angleOut, scriptOut, creativeDirectorOut, previousOutput, feedback);
 
     // Dummy schema to bypass runOpenRouter's internal strict Zod enforcement, 

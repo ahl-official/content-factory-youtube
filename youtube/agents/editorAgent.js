@@ -46,7 +46,18 @@ async function runEditorAgent(project, scriptOutput, productionPlan, thumbnailCo
         try {
             console.log(`[Editor Agent] Attempt ${attempts}...`);
             const passThroughSchema = { parse: (data) => data };
-            let rawData = await generate({ agentId: 11, sysPrompt: PROMPT_TEMPLATE, userPrompt: prompt, schema: passThroughSchema, isScript: false });
+
+            let sysPrompt = PROMPT_TEMPLATE;
+            let engineEnforcements = [];
+            if (project.BrandVoiceRule) engineEnforcements.push(`[MANDATORY BRAND TONE]: ${project.BrandVoiceRule}`);
+            if (project.EditingStyleRule) engineEnforcements.push(`[MANDATORY EDITING STYLE]: ${project.EditingStyleRule}`);
+            if (project.CreatorPlaybookRule) engineEnforcements.push(`[CREATOR MODELING (EDITING)]: ${project.CreatorPlaybookRule}`);
+
+            if (engineEnforcements.length > 0) {
+                sysPrompt += `\n\n=== EXTREMELY CRITICAL PROJECT RULES ===\nYou MUST strictly follow these foundational rules for this specific project:\n${engineEnforcements.join('\n\n')}\n========================================\n`;
+            }
+
+            let rawData = await generate({ agentId: 11, sysPrompt: sysPrompt, userPrompt: prompt, schema: passThroughSchema, isScript: false });
 
             let validated;
             try {

@@ -8,7 +8,20 @@ async function runScriptAgent(projectContext, researchOut, angleOut, strategistO
         contextToSend._consultationStory = consultationStoryData;
     }
 
-    const sysPrompt = promptGen.sysPrompt;
+    let sysPrompt = promptGen.sysPrompt;
+
+    // ENFORCE ENGINE TAB RULES STRONGLY AT THE SYS PROMPT LEVEL
+    let engineEnforcements = [];
+    if (contextToSend.BrandVoiceRule) engineEnforcements.push(`[MANDATORY BRAND VOICE]: ${contextToSend.BrandVoiceRule}`);
+    if (contextToSend.TargetAudienceRule) engineEnforcements.push(`[MANDATORY AUDIENCE RULE]: ${contextToSend.TargetAudienceRule}`);
+    if (contextToSend.EditingStyleRule) engineEnforcements.push(`[MANDATORY EDITING STYLE]: ${contextToSend.EditingStyleRule}`);
+    if (contextToSend.ThumbnailStyleRule) engineEnforcements.push(`[MANDATORY THUMBNAIL/VISUAL STYLE]: ${contextToSend.ThumbnailStyleRule}`);
+    if (contextToSend._globalHookLibrary) engineEnforcements.push(`[MANDATORY HOOK LIBRARY]:\n${JSON.stringify(contextToSend._globalHookLibrary, null, 2)}`);
+
+    if (engineEnforcements.length > 0) {
+        sysPrompt += `\n\n=== EXTREMELY CRITICAL PROJECT RULES ===\nYou MUST strictly follow these foundational rules for this specific project. Failure to use the exact brand name or tone specified here is unacceptable:\n${engineEnforcements.join('\n\n')}\n========================================\n`;
+    }
+
     const userPrompt = promptGen.buildUserPrompt(contextToSend, researchOut, angleOut, strategistOut, structureOut, sirAngleFb, sirStructureFb, previousOutput, feedback);
 
     // isScript = true unlocks maxTokens required for long scripts
@@ -64,81 +77,14 @@ async function runScriptAgent(projectContext, researchOut, angleOut, strategistO
                 throw new Error("Validation Failed: fullScript is missing or suspiciously short. Must contain actual narration.");
             }
 
-            // --- FINAL GROUNDING VALIDATION PASS ---
-            const groundingSysPrompt = `You are a Factual Grounding Editor for YouTube scripts.
-Your ONLY job is to read an assembled script and verify every specific claim against approved upstream data. 
-A subject-specific claim is allowed ONLY if it is explicitly present in the Approved Upstream Data.
-
-Flag and rewrite unsupported claims (in BOTH first-person and third-person) involving:
-- age, Norwood classification, diagnosis, personal event, personal conversation
-- surgeon consultation, specialist observation, scalp examination, fitting experience
-- gym/wind/pool/sleep test, partner/barber/colleague reaction, adhesive failure
-- exact maintenance behavior, exact timeline, percentage, cost, exact product lifespan
-- medication requirement, measured outcome, comparison result
-- phrases like "no one noticed" or "seamless under every light"
-
-This applies strictly whether the sentence says "I...", "He...", "The subject...", or "The specialist...".
-
-ACTIONS FOR UNSUPPORTED CLAIMS:
-1. KEEP: Only if explicitly supported upstream.
-2. GENERALIZE: If useful educational context can be stated safely without pretending it happened to the subject (e.g. "Some users also think about how to discuss the change").
-3. REMOVE: If generalizing still creates an unsupported factual or medical claim.
-
-Do NOT invent new statistics, medical claims, maintenance schedules, prices, or timelines. Truthfulness > detail.
-Preserve the approved angle, chapter order, transitions, and pacing, but factual grounding has priority over dramatic specificity.
-Return purely the corrected JSON.`;
-
-            const groundingUserPrompt = `Approved Upstream Context:
-Project: ${JSON.stringify(contextToSend)}
-Research: ${JSON.stringify(researchOut)}
-Angle: ${JSON.stringify(angleOut)}
-Strategist: ${JSON.stringify(strategistOut)}
-Structure: ${JSON.stringify(structureOut)}
-Sir Angle Feedback: ${sirAngleFb ? sirAngleFb : "None"}
-Sir Structure Feedback: ${sirStructureFb ? sirStructureFb : "None"}
-Consultation Story: ${consultationStoryData ? JSON.stringify(consultationStoryData) : "None"}
-Previous Output: ${previousOutput ? JSON.stringify(previousOutput) : "None"}
-Sir Script Feedback: ${feedback ? feedback : "None"}
-
-Generated Script To Edit:
-${JSON.stringify(result)}
-
-Execute the grounding pass. Return purely the corrected JSON.`;
-
-            const finalGroundedResult = await generate({ agentId: 5, sysPrompt: groundingSysPrompt, userPrompt: groundingUserPrompt, schema: scriptSchema, isScript: true });
-
-            // Re-compile final script after grounding pass
-            let finalCompiledScript = finalGroundedResult.opening ? finalGroundedResult.opening + "\n\n" : "";
-
-            if (finalGroundedResult.chapters && Array.isArray(finalGroundedResult.chapters)) {
-                for (let i = 0; i < finalGroundedResult.chapters.length; i++) {
-                    const ch = finalGroundedResult.chapters[i];
-                    if (finalGroundedResult.transitions && finalGroundedResult.transitions[i - 1]) {
-                        finalCompiledScript += "TRANSITION: " + finalGroundedResult.transitions[i - 1] + "\n\n";
-                    }
-                    finalCompiledScript += `CHAPTER ${i + 1}: ${ch.chapterTitle}\n${ch.scriptText}\n\n`;
-                    if (finalGroundedResult.rehooks && finalGroundedResult.rehooks[i]) {
-                        finalCompiledScript += "REHOOK: " + finalGroundedResult.rehooks[i] + "\n\n";
-                    }
-                }
-            }
-            if (finalGroundedResult.cta) finalCompiledScript += "CTA: " + finalGroundedResult.cta + "\n\n";
-            if (finalGroundedResult.ending) finalCompiledScript += "ENDING: " + finalGroundedResult.ending + "\n\n";
-
-            finalGroundedResult.fullScript = finalCompiledScript.trim();
-
-            if (!finalGroundedResult.fullScript || finalGroundedResult.fullScript.length < 500) {
-                throw new Error("Validation Failed: Final Grounding Pass maliciously truncated the script.");
-            }
-
             // CALCULATE ACTUAL WORD COUNT AND DURATION
-            const wc = finalGroundedResult.fullScript.split(/\s+/).length;
-            finalGroundedResult.estimatedWordCount = wc;
-            finalGroundedResult.estimatedDurationMinutes = Math.max(1, Math.round(wc / 150));
+            const wc = result.fullScript.split(/\s+/).length;
+            result.estimatedWordCount = wc;
+            result.estimatedDurationMinutes = Math.max(1, Math.round(wc / 150));
 
             // FINAL SANITY CHECK FOR RED-FLAG HALLUCINATIONS
             const upstreamJSONString = JSON.stringify({ contextToSend, researchOut, angleOut, strategistOut, structureOut, consultationStoryData }).toLowerCase();
-            const lowerScript = finalGroundedResult.fullScript.toLowerCase();
+            const lowerScript = result.fullScript.toLowerCase();
 
             const forbiddenIfMissing = [
                 'norwood', '$', '₹', 'my partner', 'his friend', 'my barber', 'my friend', 'surgeon', 'clinic'
@@ -150,7 +96,7 @@ Execute the grounding pass. Return purely the corrected JSON.`;
                 }
             }
 
-            return finalGroundedResult;
+            return result;
         } catch (err) {
             lastError = err;
             console.warn(`Script validation attempt ${attempts + 1} failed: ${err.message}. Retrying...`);

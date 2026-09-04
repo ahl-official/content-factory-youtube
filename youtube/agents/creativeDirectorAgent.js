@@ -3,7 +3,17 @@ const { creativeDirectorSchema } = require('../youtubeSchemas');
 const promptGen = require('../prompts/creativeDirectorPrompt');
 
 async function runCreativeDirectorAgent(projectContext, researchOut, angleOut, structureOut, scriptOut, feedback = null, previousOutput = null) {
-    const sysPrompt = promptGen.sysPrompt;
+    let sysPrompt = promptGen.sysPrompt;
+
+    let engineEnforcements = [];
+    if (projectContext.BrandVoiceRule) engineEnforcements.push(`[MANDATORY BRAND TONE]: ${projectContext.BrandVoiceRule}`);
+    if (projectContext.EditingStyleRule) engineEnforcements.push(`[MANDATORY EDITING STYLE]: ${projectContext.EditingStyleRule}`);
+    if (projectContext._globalHookLibrary) engineEnforcements.push(`[MANDATORY HOOK LIBRARY]:\n${JSON.stringify(projectContext._globalHookLibrary, null, 2)}`);
+
+    if (engineEnforcements.length > 0) {
+        sysPrompt += `\n\n=== EXTREMELY CRITICAL PROJECT RULES ===\nYou MUST strictly follow these foundational rules for this specific project:\n${engineEnforcements.join('\n\n')}\n========================================\n`;
+    }
+
     let userPrompt = promptGen.buildUserPrompt(projectContext, researchOut, angleOut, structureOut, scriptOut, feedback, previousOutput);
 
     let lastError = null;

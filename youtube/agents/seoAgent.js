@@ -3,7 +3,15 @@ const { seoPackageSchema } = require('../youtubeSchemas');
 const promptGen = require('../prompts/seoPrompt');
 
 async function runSeoAgent(projectContext, researchOut, finalTitle, scriptOut, thumbnailDirection, feedback = null, previousOutput = null) {
-    const sysPrompt = promptGen.sysPrompt;
+    let sysPrompt = promptGen.sysPrompt;
+
+    let engineEnforcements = [];
+    if (projectContext.BrandVoiceRule) engineEnforcements.push(`[MANDATORY BRAND TONE]: ${projectContext.BrandVoiceRule}`);
+    if (projectContext.TargetAudienceRule) engineEnforcements.push(`[MANDATORY AUDIENCE RULE]: ${projectContext.TargetAudienceRule}`);
+
+    if (engineEnforcements.length > 0) {
+        sysPrompt += `\n\n=== EXTREMELY CRITICAL PROJECT RULES ===\nYou MUST strictly follow these foundational rules for this specific project:\n${engineEnforcements.join('\n\n')}\n========================================\n`;
+    }
     let userPrompt = promptGen.buildUserPrompt(projectContext, researchOut, finalTitle, scriptOut, thumbnailDirection, feedback);
 
     const passThroughSchema = {

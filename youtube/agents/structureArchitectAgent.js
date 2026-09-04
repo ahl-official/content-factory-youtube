@@ -8,7 +8,19 @@ async function runStructureAgent(projectContext, researchOutput, selectedAngleDa
         contextToSend._consultationStory = consultationStoryData;
     }
 
-    const sysPrompt = promptGen.sysPrompt;
+    let sysPrompt = promptGen.sysPrompt;
+
+    let engineEnforcements = [];
+    if (contextToSend.BrandVoiceRule) engineEnforcements.push(`[MANDATORY BRAND VOICE]: ${contextToSend.BrandVoiceRule}`);
+    if (contextToSend.TargetAudienceRule) engineEnforcements.push(`[MANDATORY AUDIENCE RULE]: ${contextToSend.TargetAudienceRule}`);
+    if (contextToSend.EditingStyleRule) engineEnforcements.push(`[MANDATORY EDITING STYLE]: ${contextToSend.EditingStyleRule}`);
+    if (contextToSend.ThumbnailStyleRule) engineEnforcements.push(`[MANDATORY THUMBNAIL/VISUAL STYLE]: ${contextToSend.ThumbnailStyleRule}`);
+    if (contextToSend._globalHookLibrary) engineEnforcements.push(`[MANDATORY HOOK LIBRARY]:\n${JSON.stringify(contextToSend._globalHookLibrary, null, 2)}`);
+
+    if (engineEnforcements.length > 0) {
+        sysPrompt += `\n\n=== EXTREMELY CRITICAL PROJECT RULES ===\nYou MUST strictly follow these foundational rules for this specific project. Failure to use the exact brand name or tone specified here is unacceptable:\n${engineEnforcements.join('\n\n')}\n========================================\n`;
+    }
+
     const userPrompt = promptGen.buildUserPrompt(contextToSend, researchOutput, selectedAngleData, strategistOutput, sirAngleFeedback, previousOutput, feedback);
 
     // Structure can be slightly larger, we don't necessarily need the script logic yet though
