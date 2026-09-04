@@ -1085,6 +1085,24 @@ function YoutubeWorkspace({ project, onBack, learnFromFeedback, isYoutubeConnect
     const [isSubmittingSirReview, setIsSubmittingSirReview] = useState(false);
     const [errorMsg, setErrorMsg] = useState(null);
 
+    // Cancel / Abort logic
+    const abortControllerRef = useRef(null);
+    const timerIntervalRef = useRef(null);
+
+    const handleCancelGeneration = () => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+            abortControllerRef.current = null;
+        }
+        if (timerIntervalRef.current) {
+            clearInterval(timerIntervalRef.current);
+            timerIntervalRef.current = null;
+        }
+        setIsGenerating(false);
+        setShowFeedback(false);
+        setJobStatusMsg('');
+    };
+
     // Selected Angle (Agent 2)
     const [selectedAngleId, setSelectedAngleId] = useState(null);
     const [isSubmittingForSir, setIsSubmittingForSir] = useState(false);
@@ -1326,25 +1344,33 @@ function YoutubeWorkspace({ project, onBack, learnFromFeedback, isYoutubeConnect
             const startTime = Date.now();
             setJobStatusMsg('Starting Agent Execution...');
 
-            const timerInterval = setInterval(() => {
+            if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+            if (abortControllerRef.current) abortControllerRef.current.abort();
+            abortControllerRef.current = new AbortController();
+
+            timerIntervalRef.current = setInterval(() => {
                 const elapsedNum = Math.floor((Date.now() - startTime) / 1000);
                 const m = Math.floor(elapsedNum / 60);
                 const s = (elapsedNum % 60).toString().padStart(2, '0');
-                setJobStatusMsg(`Agent generating (${m}:${s})... please wait`);
+                setJobStatusMsg(`Agent generating (${m}:${s})... click Cancel to stop`);
             }, 1000);
 
             let res;
             try {
                 res = await fetch(`${API_URL}/youtube/generate`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    signal: abortControllerRef.current.signal,
                     body: JSON.stringify({ projectId: fullProject.ProjectID, currentAgent: activeAgentId, payload })
                 });
             } catch (err) {
-                clearInterval(timerInterval);
+                if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+                if (err.name === 'AbortError') {
+                    throw new Error("Generation was cancelled by the user.");
+                }
                 throw new Error("Network connection failed or Vercel forcibly closed the connection.");
             }
 
-            clearInterval(timerInterval);
+            if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
 
             const textResponse = await res.text();
             let data;
@@ -1367,6 +1393,7 @@ function YoutubeWorkspace({ project, onBack, learnFromFeedback, isYoutubeConnect
             setErrorMsg(e.message);
             setIsGenerating(false);
             setJobStatusMsg('');
+            if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
         }
     };
 
@@ -3029,7 +3056,12 @@ function YoutubeWorkspace({ project, onBack, learnFromFeedback, isYoutubeConnect
                                 <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '0.8rem' }}>OUTPUT</div>
                                 {needsGeneration ? (
                                     <div style={{ padding: '2rem', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '8px' }}>
-                                        <button className="yt-btn-primary" onClick={() => handleGenerate(false)} disabled={isGenerating || isApproving}>{isGenerating ? 'Generating...' : `Generate ${activeAgent?.name}`}</button>
+                                        <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', alignItems: 'center' }}>
+                                            <button className="yt-btn-primary" onClick={() => handleGenerate(false)} disabled={isGenerating || isApproving}>{isGenerating ? 'Generating...' : `Generate ${activeAgent?.name}`}</button>
+                                            {isGenerating && (
+                                                <button className="yt-btn-secondary" onClick={handleCancelGeneration} style={{ borderColor: 'rgba(239, 68, 68, 0.4)', color: '#ef4444' }}>Stop</button>
+                                            )}
+                                        </div>
                                         {isGenerating && jobStatusMsg && <div style={{ marginTop: '1rem', color: '#a1a1aa', fontSize: '0.9rem' }}>{jobStatusMsg}</div>}
                                     </div>
                                 ) : (
@@ -3150,7 +3182,7 @@ function YoutubeWorkspace({ project, onBack, learnFromFeedback, isYoutubeConnect
                                 <div style={{ padding: '1rem', background: 'rgba(0,0,0,0.3)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                                     <textarea className="input-field" rows="2" placeholder="Tell the AI what to change..." value={feedbackText} onChange={e => setFeedbackText(e.target.value)} style={{ width: '100%', marginBottom: '0.5rem' }} />
                                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                                        <button className="yt-btn-secondary" onClick={() => setShowFeedback(false)}>Cancel</button>
+                                        <button className="yt-btn-secondary" onClick={isGenerating ? handleCancelGeneration : () => setShowFeedback(false)}>{isGenerating ? 'Cancel Generation' : 'Cancel'}</button>
                                         <button className="yt-btn-primary" onClick={() => handleGenerate(true)} disabled={isGenerating || isApproving}>{isGenerating ? 'Generating...' : 'Generate New Version'}</button>
                                     </div>
                                 </div>
