@@ -7,6 +7,6 @@ module.exports = {
 
     // Limits
     DEFAULT_MAX_TOKENS: 1500,
-    SCRIPT_MAX_TOKENS: 3500,
+    SCRIPT_MAX_TOKENS: 12000,
     TEMPERATURE: 0.7
 };

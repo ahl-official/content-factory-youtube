@@ -399,6 +399,12 @@ export default function YoutubeFactory({
             {view === 'hooks' && <HookLibraryView hookLibrary={hookLibrary} setHookLibrary={setHookLibrary} />}
             {view === 'new_project' && <YoutubeNewProject onCreate={async (p) => {
                 try {
+                    const locBrand = brandVoices.find(b => b.id === activeBrandVoiceId);
+                    const locAudience = targetAudiences.find(a => a.id === activeAudienceId);
+                    const locEditing = editingStyles.find(e => e.id === activeEditingStyleId);
+                    const locThumbnail = thumbnailStyles.find(t => t.id === activeThumbnailStyleId);
+                    const locCreator = creatorReferences.find(c => c.id === activeCreatorId);
+
                     const payload = {
                         ...p,
                         WorkingTitle: p.title,
@@ -406,17 +412,17 @@ export default function YoutubeFactory({
                         ResearchBehavior: p.researchBehavior,
                         Strategy: p.strategy,
                         ContentType: p.contentType,
-                        TargetAudience: p.targetAudience,
+                        TargetAudience: p.targetAudience, // Original input audience description
                         BusinessObjective: p.businessObj,
                         Notes: p.notes,
                         Status: 'In Research',
                         CurrentAgent: 1,
                         CurrentStage: 'Not Requested',
-                        BrandVoiceRule: activeBrandVoice?.rules || '',
-                        TargetAudienceRule: activeAudience?.rules || '',
-                        EditingStyleRule: activeEditingStyle?.rules || '',
-                        ThumbnailStyleRule: activeThumbnailStyle?.rules || '',
-                        CreatorPlaybookRule: activeCreator?.rules || ''
+                        BrandVoiceRule: locBrand ? `Tone: ${locBrand.tone || ''}\nRules: ${locBrand.rules || ''}` : '',
+                        TargetAudienceRule: locAudience ? `Audience Persona: ${locAudience.name || ''}\nPsychological Profile: ${locAudience.notes || ''}` : '',
+                        EditingStyleRule: locEditing ? locEditing.rules || '' : '',
+                        ThumbnailStyleRule: locThumbnail ? locThumbnail.rules || '' : '',
+                        CreatorPlaybookRule: locCreator ? `Creator to model after: ${locCreator.name || ''}\nStyle notes: ${locCreator.styleNotes || ''}` : ''
                     };
                     const res = await fetch(`${API_URL}/yt/projects`, {
                         method: 'POST',

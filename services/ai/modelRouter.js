@@ -88,6 +88,10 @@ async function routeGeneration({ agentId, sysPrompt, userPrompt, maxTokens, temp
                 throw new Error('EMPTY_RESPONSE');
             }
 
+            if (result.finishReason === 'length' || result.finishReason === 'MAX_TOKENS') {
+                throw new Error("TRUNCATED_CONTENT");
+            }
+
             let parsed = null;
             if (validateFn) {
                 parsed = validateFn(result.responseText);
