@@ -112,7 +112,7 @@ const TABS = {
 const HEADERS = {
     [TABS.PROJECTS]: ['ProjectID', 'WorkingTitle', 'SourceType', 'TargetAudience', 'BusinessObjective', 'Strategy', 'ContentType', 'Notes', 'Status', 'CurrentStage', 'CurrentAgent', 'Progress', 'IsConsultation', 'CreatedAt', 'UpdatedAt', 'PublishedVideoID', 'PublishedURL', 'consultationTranscript', 'consultationContext', 'consultationTurningPoint', 'transformationBefore', 'transformationChanged', 'transformationAfter', 'transformationTurningPoint', 'transformationFocus', 'referenceUrl', 'referenceLearnings', 'referenceNotes', 'ReferenceFileName', 'ReferenceFileType', 'ReferenceFileSize', 'ResearchBehavior', 'BrandVoiceRule', 'TargetAudienceRule', 'EditingStyleRule', 'ThumbnailStyleRule', 'CreatorPlaybookRule'],
     [TABS.AGENT_RUNS]: ['RunID', 'ProjectID', 'AgentKey', 'AgentName', 'Version', 'InputData', 'OutputData', 'Feedback', 'Status', 'IsApproved', 'CreatedAt', 'UpdatedAt', 'ApprovedAt'],
-    [TABS.RESEARCH]: ['ResearchID', 'ProjectID', 'ResearchVersion', 'ResearchMode', 'ResearchSeed', 'CanonicalTopic', 'SourceType', 'ResearchStatus', 'ResearchSummary', 'TopicOpportunities', 'AudienceQuestions', 'YouTubeInsights', 'SearchInsights', 'CommunityInsights', 'ContentGaps', 'Evidence', 'ResearchDirections', 'RecommendedOpportunity', 'Sources', 'ProviderStatuses', 'Approved', 'CreatedAt', 'UpdatedAt'],
+    [TABS.RESEARCH]: ['ResearchID', 'ProjectID', 'ResearchVersion', 'ResearchMode', 'ResearchSeed', 'CanonicalTopic', 'SourceType', 'ResearchStatus', 'ResearchSummary', 'TopicOpportunities', 'AudienceQuestions', 'YouTubeInsights', 'SearchInsights', 'CommunityInsights', 'ContentGaps', 'Evidence', 'ResearchDirections', 'RecommendedOpportunity', 'Sources', 'ProviderStatuses', 'YoutubePackaging', 'BusinessFit', 'LikelySearchIntent', 'LikelyBrowsePotential', 'ConfidenceNotes', 'Approved', 'CreatedAt', 'UpdatedAt'],
     [TABS.FEEDBACK]: ['FeedbackID', 'ProjectID', 'Stage', 'AgentKey', 'Version', 'FeedbackType', 'FeedbackText', 'Source', 'IsSirFeedback', 'CreatedAt'],
     [TABS.SCRIPTS]: ['ScriptID', 'ProjectID', 'Version', 'ScriptText', 'BasedOnRunID', 'FeedbackSummary', 'IsApproved', 'CreatedAt', 'ApprovedAt'],
     [TABS.ASSETS]: ['AssetID', 'ProjectID', 'AssetType', 'Version', 'AssetData', 'IsApproved', 'CreatedAt'],
@@ -523,6 +523,7 @@ async function upsertAgentArtifact(options) {
             await sheet.resize({ rowCount: sheet.rowCount || 100, columnCount: newHeaders.length + 5 });
         }
         await sheet.setHeaderRow(newHeaders);
+        await sheet.loadHeaderRow(); // CRITICAL: Forces google-spreadsheet SDK to re-fetch the headers so .addRow() serializes them
     }
 
     const rows = await sheet.getRows();
