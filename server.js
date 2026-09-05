@@ -146,8 +146,13 @@ app.get('/api/db/load', async (req, res) => {
   }
 });
 
+let isSavingDb = false;
+
 app.post('/api/db/save', async (req, res) => {
   if (!doc) return res.json({ success: true, warning: "No DB connection" });
+  if (isSavingDb) return res.status(429).json({ error: "DB Save already in progress (Mutex locked)" });
+
+  isSavingDb = true;
   try {
     await doc.loadInfo();
     const payload = req.body;
@@ -180,22 +185,47 @@ app.post('/api/db/save', async (req, res) => {
           await sheet.resize({ rowCount: sheet.rowCount || 1, columnCount: Math.max(headers.length, sheet.columnCount || 1) });
           await sheet.setHeaderRow(headers);
         }
+        await sheet.loadHeaderRow();
 
-        await sheet.clearRows(); // clear old data
-        const rowsToAdd = value.map(item => {
-          const row = {};
-          headers.forEach(h => {
-            row[h] = typeof item[h] === 'object' ? JSON.stringify(item[h]) : item[h];
-          });
-          return row;
-        });
+        const existingRows = await sheet.getRows();
+        const incomingIds = new Set(value.map(v => String(v.id)));
+
+        // Delete removed items
+        for (const row of existingRows) {
+          const rowId = row.get('id');
+          if (rowId && !incomingIds.has(String(rowId))) {
+            await row.delete();
+          }
+        }
+
+        const rowsToAdd = [];
+        for (const item of value) {
+          const existingRow = existingRows.find(r => String(r.get('id')) === String(item.id));
+          if (existingRow) {
+            let updated = false;
+            headers.forEach(h => {
+              const stringVal = typeof item[h] === 'object' ? JSON.stringify(item[h]) : String(item[h] !== undefined && item[h] !== null ? item[h] : '');
+              if (existingRow.get(h) !== stringVal) {
+                existingRow.set(h, stringVal);
+                updated = true;
+              }
+            });
+            if (updated) await existingRow.save();
+          } else {
+            const rowObj = {};
+            headers.forEach(h => {
+              rowObj[h] = typeof item[h] === 'object' ? JSON.stringify(item[h]) : String(item[h] !== undefined && item[h] !== null ? item[h] : '');
+            });
+            rowsToAdd.push(rowObj);
+          }
+        }
         if (rowsToAdd.length > 0) await sheet.addRows(rowsToAdd);
       } else {
         settings[key] = value;
       }
     }
 
-    // Save Settings
+    // Save Settings Granularly
     if (Object.keys(settings).length > 0) {
       let sheet = doc.sheetsByTitle['Settings'];
       if (!sheet) {
@@ -210,11 +240,32 @@ app.post('/api/db/save', async (req, res) => {
       } else {
         await sheet.setHeaderRow(['Key', 'Value']);
       }
-      await sheet.clearRows();
-      const rowsToAdd = Object.entries(settings).map(([k, v]) => ({
-        Key: k, Value: typeof v === 'object' ? JSON.stringify(v) : String(v)
-      }));
-      await sheet.addRows(rowsToAdd);
+      await sheet.loadHeaderRow();
+
+      const existingRows = await sheet.getRows();
+      const incomingKeys = new Set(Object.keys(settings));
+
+      for (const row of existingRows) {
+        const rowKey = row.get('Key');
+        if (rowKey && !incomingKeys.has(rowKey)) {
+          await row.delete();
+        }
+      }
+
+      const rowsToAdd = [];
+      for (const [k, v] of Object.entries(settings)) {
+        const stringVal = typeof v === 'object' ? JSON.stringify(v) : String(v);
+        const existingRow = existingRows.find(r => r.get('Key') === k);
+        if (existingRow) {
+          if (existingRow.get('Value') !== stringVal) {
+            existingRow.set('Value', stringVal);
+            await existingRow.save();
+          }
+        } else {
+          rowsToAdd.push({ Key: k, Value: stringVal });
+        }
+      }
+      if (rowsToAdd.length > 0) await sheet.addRows(rowsToAdd);
     }
 
     reelDbCache = null;
@@ -222,6 +273,8 @@ app.post('/api/db/save', async (req, res) => {
   } catch (e) {
     logger.error({ err: e }, "DB save error");
     res.status(500).json({ error: e.message });
+  } finally {
+    isSavingDb = false;
   }
 });
 

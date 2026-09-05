@@ -206,11 +206,16 @@ function App() {
       activeThumbnailStyleId: activeThumbnailStyleId || '',
       activeEditingStyleId: activeEditingStyleId || ''
     };
-    fetch(`${API_URL}/db/save`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    }).catch(e => console.error("DB Sync Error:", e));
+
+    const saveTimeout = setTimeout(() => {
+      fetch(`${API_URL}/db/save`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).catch(e => console.error("DB Sync Error:", e));
+    }, 1500); // Debounce to prevent race condition row-duplication on G-Sheets
+
+    return () => clearTimeout(saveTimeout);
   }, [topics, sirStyleGuide, creatorReferences, targetAudiences, hookLibrary, brandVoices, thumbnailStyles, editingStyles, videoFormats, activeCreatorId, activeAudienceId, activeBrandVoiceId, activeThumbnailStyleId, activeEditingStyleId, isLoadingDB]);
 
   // Called every time Sir gives feedback on anything
