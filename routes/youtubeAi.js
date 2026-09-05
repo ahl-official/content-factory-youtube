@@ -232,6 +232,11 @@ router.post('/projects/:id/agents/research/run', async (req, res) => {
                 RecommendedOpportunity: parsed.recommendedResearchOpportunity || parsed.youtubeContentOpportunity,
                 Sources: JSON.stringify(parsed.sources),
                 ProviderStatuses: JSON.stringify(parsed.providerStatuses),
+                YoutubePackaging: JSON.stringify(parsed.youtubePackaging),
+                BusinessFit: JSON.stringify(parsed.businessFit),
+                LikelySearchIntent: parsed.likelySearchIntent || '',
+                LikelyBrowsePotential: parsed.likelyBrowsePotential || '',
+                ConfidenceNotes: parsed.confidenceNotes || '',
                 Approved: 'False'
             });
         } catch (e) {
@@ -948,10 +953,29 @@ router.post('/projects/:id/agents/:agentKey/approve', async (req, res) => {
 
                 await ytDb.saveResearch({
                     ProjectID: req.params.id,
-                    Topic: parsedOutput?.topicSummary || 'Approved Research Compilation',
+                    ResearchVersion: String(targetRun.Version),
+                    ResearchMode: 'Agent',
+                    CanonicalTopic: parsedOutput?.topicSummary || 'Approved Research Compilation',
                     SourceType: 'Agent Generation',
-                    SourceTitle: 'Research Agent output',
-                    Insight: typeof parsedOutput === 'object' ? JSON.stringify(parsedOutput) : targetRun.OutputData
+                    ResearchStatus: 'Approved',
+                    ResearchSummary: typeof parsedOutput.topicSummary === 'string' ? parsedOutput.topicSummary : JSON.stringify(parsedOutput.topicSummary),
+                    TopicOpportunities: JSON.stringify(parsedOutput.topicOpportunities),
+                    AudienceQuestions: JSON.stringify(parsedOutput.audienceQuestions),
+                    YouTubeInsights: JSON.stringify(parsedOutput.youtubeInsights),
+                    SearchInsights: JSON.stringify(parsedOutput.searchInsights),
+                    CommunityInsights: JSON.stringify(parsedOutput.communityInsights),
+                    ContentGaps: JSON.stringify(parsedOutput.contentGaps),
+                    Evidence: JSON.stringify(parsedOutput.evidence),
+                    ResearchDirections: JSON.stringify(parsedOutput.researchDirections),
+                    RecommendedOpportunity: parsedOutput.recommendedResearchOpportunity || parsedOutput.youtubeContentOpportunity,
+                    Sources: JSON.stringify(parsedOutput.sources),
+                    ProviderStatuses: JSON.stringify(parsedOutput.providerStatuses),
+                    YoutubePackaging: JSON.stringify(parsedOutput.youtubePackaging),
+                    BusinessFit: JSON.stringify(parsedOutput.businessFit),
+                    LikelySearchIntent: parsedOutput.likelySearchIntent || '',
+                    LikelyBrowsePotential: parsedOutput.likelyBrowsePotential || '',
+                    ConfidenceNotes: parsedOutput.confidenceNotes || '',
+                    Approved: 'True'
                 });
             } catch (e) {
                 console.error("Failed to populate YT_Research sheet:", e);
