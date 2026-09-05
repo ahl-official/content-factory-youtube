@@ -402,7 +402,6 @@ export default function YoutubeFactory({
                 <button className={`btn ${view === 'brands' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('brands')}>👑 Brand Voices{getDot('brands')}</button>
                 <button className={`btn ${view === 'thumbnails' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('thumbnails')}>🖼️ Thumbnail Styles{getDot('thumbnails')}</button>
                 <button className={`btn ${view === 'editing' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('editing')}>✂️ Editing Styles{getDot('editing')}</button>
-                <button className={`btn ${view === 'formats' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('formats')}>🎬 Video Formats</button>
                 <button className={`btn ${view === 'hooks' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('hooks')}>🪝 Hook Library</button>
             </div>
 
@@ -420,7 +419,6 @@ export default function YoutubeFactory({
             {view === 'brands' && <BrandVoicesView brandVoices={brandVoices} setBrandVoices={setBrandVoices} activeBrandVoiceId={activeBrandVoiceId} setActiveBrandVoiceId={setActiveBrandVoiceId} />}
             {view === 'thumbnails' && <ThumbnailStylesView thumbnailStyles={thumbnailStyles} setThumbnailStyles={setThumbnailStyles} activeThumbnailStyleId={activeThumbnailStyleId} setActiveThumbnailStyleId={setActiveThumbnailStyleId} />}
             {view === 'editing' && <EditingStylesView editingStyles={editingStyles} setEditingStyles={setEditingStyles} activeEditingStyleId={activeEditingStyleId} setActiveEditingStyleId={setActiveEditingStyleId} />}
-            {view === 'formats' && <VideoFormatsView videoFormats={videoFormats} setVideoFormats={setVideoFormats} />}
             {view === 'hooks' && <HookLibraryView hookLibrary={hookLibrary} setHookLibrary={setHookLibrary} />}
             {view === 'new_project' && <YoutubeNewProject onCreate={async (p) => {
                 try {
