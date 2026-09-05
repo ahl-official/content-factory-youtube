@@ -362,6 +362,25 @@ export default function YoutubeFactory({
 
     const currentProject = projects.find(p => p.id === activeProjectId);
 
+    const getDot = (type) => {
+        if (view === 'new_project') {
+            if (type === 'guide') return sirStyleGuide ? ' ●' : '';
+            if (type === 'creators') return activeCreatorId ? ' ●' : '';
+            if (type === 'audiences') return activeAudienceId ? ' ●' : '';
+            if (type === 'brands') return activeBrandVoiceId ? ' ●' : '';
+            if (type === 'thumbnails') return activeThumbnailStyleId ? ' ●' : '';
+            if (type === 'editing') return activeEditingStyleId ? ' ●' : '';
+        } else if (view === 'workspace' && currentProject) {
+            if (type === 'guide') return ''; // Assumed universally applied
+            if (type === 'creators') return currentProject.CreatorPlaybookRule ? ' ●' : '';
+            if (type === 'audiences') return currentProject.TargetAudienceRule ? ' ●' : '';
+            if (type === 'brands') return currentProject.BrandVoiceRule ? ' ●' : '';
+            if (type === 'thumbnails') return currentProject.ThumbnailStyleRule ? ' ●' : '';
+            if (type === 'editing') return currentProject.EditingStyleRule ? ' ●' : '';
+        }
+        return '';
+    };
+
     return (
         <div className={view === 'workspace' ? 'yt-viewport-lock' : ''} style={view !== 'workspace' ? { display: 'flex', flexDirection: 'column', height: '100%', marginTop: '0.5rem' } : {}}>
 
@@ -377,12 +396,12 @@ export default function YoutubeFactory({
 
                 <div style={{ width: '100%', height: '5px' }}></div>
 
-                <button className={`btn ${view === 'guide' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('guide')}>🧠 Sir's Style Guide {sirStyleGuide ? '●' : ''}</button>
-                <button className={`btn ${view === 'creators' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('creators')}>🎬 Creator Playbook {activeCreatorId ? '●' : ''}</button>
-                <button className={`btn ${view === 'audiences' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('audiences')}>🎯 Target Audience {activeAudienceId ? '●' : ''}</button>
-                <button className={`btn ${view === 'brands' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('brands')}>👑 Brand Voices {activeBrandVoiceId ? '●' : ''}</button>
-                <button className={`btn ${view === 'thumbnails' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('thumbnails')}>🖼️ Thumbnail Styles {activeThumbnailStyleId ? '●' : ''}</button>
-                <button className={`btn ${view === 'editing' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('editing')}>✂️ Editing Styles {activeEditingStyleId ? '●' : ''}</button>
+                <button className={`btn ${view === 'guide' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('guide')}>🧠 Sir's Style Guide{getDot('guide')}</button>
+                <button className={`btn ${view === 'creators' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('creators')}>🎬 Creator Playbook{getDot('creators')}</button>
+                <button className={`btn ${view === 'audiences' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('audiences')}>🎯 Target Audience{getDot('audiences')}</button>
+                <button className={`btn ${view === 'brands' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('brands')}>👑 Brand Voices{getDot('brands')}</button>
+                <button className={`btn ${view === 'thumbnails' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('thumbnails')}>🖼️ Thumbnail Styles{getDot('thumbnails')}</button>
+                <button className={`btn ${view === 'editing' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('editing')}>✂️ Editing Styles{getDot('editing')}</button>
                 <button className={`btn ${view === 'formats' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('formats')}>🎬 Video Formats</button>
                 <button className={`btn ${view === 'hooks' ? 'yt-btn-primary' : 'yt-btn-secondary'}`} onClick={() => setView('hooks')}>🪝 Hook Library</button>
             </div>

@@ -244,18 +244,10 @@ router.post('/projects/:id/topics/select', async (req, res) => {
 });
 
 // AI Memory & Learning
-router.get('/learning', (req, res) => {
+router.get('/learning', async (req, res) => {
     try {
-        const fs = require('fs');
-        const path = require('path');
         const aiModels = require('../config/aiModels');
-
-        let memory = { learnedStyle: {}, learnedPreferences: [], history: [] };
-        const memPath = path.join(__dirname, '../memory/youtubeLearning.json');
-
-        if (fs.existsSync(memPath)) {
-            memory = JSON.parse(fs.readFileSync(memPath, 'utf8'));
-        }
+        const memory = await getMemory();
 
         // Attach system health statically for the AI Configuration panel
         memory.aiConfig = {
@@ -272,23 +264,33 @@ router.get('/learning', (req, res) => {
 });
 
 // Helper func for saving memory
-const saveMemory = (mem) => {
-    const fs = require('fs');
-    const path = require('path');
-    const memDir = path.join(__dirname, '../memory');
-    if (!fs.existsSync(memDir)) {
-        fs.mkdirSync(memDir, { recursive: true });
+const saveMemory = async (mem) => {
+    try {
+        if (mem.learnedPreferences) await ytDb.updateSetting('learnedPreferences', JSON.stringify(mem.learnedPreferences));
+        if (mem.learnedStyle) await ytDb.updateSetting('learnedStyle', JSON.stringify(mem.learnedStyle));
+        if (mem.history) await ytDb.updateSetting('history', JSON.stringify(mem.history));
+        if (mem.agentPerformance) await ytDb.updateSetting('agentPerformance', JSON.stringify(mem.agentPerformance));
+        if (mem.approvalHistory) await ytDb.updateSetting('approvalHistory', JSON.stringify(mem.approvalHistory));
+        if (mem.rejectedIdeas) await ytDb.updateSetting('rejectedIdeas', JSON.stringify(mem.rejectedIdeas));
+    } catch (e) {
+        logger.error({ err: e }, "Failed to save AI Memory to Google Sheets.");
     }
-    const memPath = path.join(memDir, 'youtubeLearning.json');
-    fs.writeFileSync(memPath, JSON.stringify(mem, null, 2), 'utf8');
 };
 
-const getMemory = () => {
-    const fs = require('fs');
-    const path = require('path');
-    const memPath = path.join(__dirname, '../memory/youtubeLearning.json');
-    if (!fs.existsSync(memPath)) return { learnedStyle: {}, learnedPreferences: [], history: [], agentPerformance: {}, approvalHistory: [], rejectedIdeas: [] };
-    return JSON.parse(fs.readFileSync(memPath, 'utf8'));
+const getMemory = async () => {
+    let memory = { learnedStyle: {}, learnedPreferences: [], history: [], agentPerformance: {}, approvalHistory: [], rejectedIdeas: [] };
+    try {
+        const settings = await ytDb.getSettings();
+        if (settings['learnedPreferences']) memory.learnedPreferences = settings['learnedPreferences'];
+        if (settings['learnedStyle']) memory.learnedStyle = settings['learnedStyle'];
+        if (settings['history']) memory.history = settings['history'];
+        if (settings['agentPerformance']) memory.agentPerformance = settings['agentPerformance'];
+        if (settings['approvalHistory']) memory.approvalHistory = settings['approvalHistory'];
+        if (settings['rejectedIdeas']) memory.rejectedIdeas = settings['rejectedIdeas'];
+    } catch (e) {
+        logger.warn("Could not load AI Memory from Google Sheets.");
+    }
+    return memory;
 };
 
 const updateAgentScore = (mem, agentName, type) => {
@@ -306,10 +308,10 @@ const updateAgentScore = (mem, agentName, type) => {
     stats.performanceScore = total > 0 ? Math.round((stats.approvedCount / total) * 100) : 100;
 };
 
-router.post('/learning/feedback', (req, res) => {
+router.post('/learning/feedback', async (req, res) => {
     try {
         const { feedback, agentName, projectId, extractedRule, category, appliesTo } = req.body;
-        const mem = getMemory();
+        const mem = await getMemory();
 
         mem.learnedPreferences.unshift({
             id: Date.now().toString(),
@@ -327,17 +329,17 @@ router.post('/learning/feedback', (req, res) => {
 
         if (agentName) updateAgentScore(mem, agentName, 'revision');
 
-        saveMemory(mem);
+        await saveMemory(mem);
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
-router.post('/learning/approval', (req, res) => {
+router.post('/learning/approval', async (req, res) => {
     try {
         const { projectId, agentName, output, approvalReason } = req.body;
-        const mem = getMemory();
+        const mem = await getMemory();
 
         if (!mem.approvalHistory) mem.approvalHistory = [];
         mem.approvalHistory.unshift({
@@ -350,17 +352,17 @@ router.post('/learning/approval', (req, res) => {
 
         if (agentName) updateAgentScore(mem, agentName, 'approve');
 
-        saveMemory(mem);
+        await saveMemory(mem);
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
-router.post('/learning/rejection', (req, res) => {
+router.post('/learning/rejection', async (req, res) => {
     try {
         const { projectId, agentName, rejectedOutput, rejectionReason, learnedAvoidRule } = req.body;
-        const mem = getMemory();
+        const mem = await getMemory();
 
         if (!mem.rejectedIdeas) mem.rejectedIdeas = [];
         mem.rejectedIdeas.unshift({
@@ -383,17 +385,17 @@ router.post('/learning/rejection', (req, res) => {
 
         if (agentName) updateAgentScore(mem, agentName, 'reject');
 
-        saveMemory(mem);
+        await saveMemory(mem);
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
-router.post('/learning/voice', (req, res) => {
+router.post('/learning/voice', async (req, res) => {
     try {
         const { extractedRule, category, appliesTo } = req.body;
-        const mem = getMemory();
+        const mem = await getMemory();
 
         if (extractedRule) {
             mem.learnedPreferences.unshift({
@@ -411,7 +413,7 @@ router.post('/learning/voice', (req, res) => {
             });
         }
 
-        saveMemory(mem);
+        await saveMemory(mem);
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
