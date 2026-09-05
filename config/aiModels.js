@@ -1,7 +1,7 @@
 module.exports = {
     gemini: {
         default: 'gemini-3.5-flash',
-        fast: 'gemini-3.5-flash',
+        fast: 'gemini-3.6-flash',
         heavy: 'gemini-3.6-flash',
         transcription: 'gemini-3.5-flash'
     },
