@@ -448,7 +448,7 @@ function BoardView({ topics, setTopics, onOpen, onNew, updateTopic, setError }) 
 ═══════════════════════════════════════════════ */
 function TopicCard({ topic, onOpen, updateTopic, setError, onDelete }) {
   const [isGenerating, setIsGenerating] = useState(false);
-  const s = STATUS_LABELS[topic.status];
+  const s = STATUS_LABELS[topic.status] || STATUS_LABELS['idea'];
   const latestScript = topic.scriptVersions.at(-1)?.script || '';
   const versionCount = topic.scriptVersions.length;
 
