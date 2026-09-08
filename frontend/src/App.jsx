@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import YoutubeFactory from './youtube/YoutubeFactory';
+import MetaAdsFactory from './metaads/MetaAdsFactory';
 
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '/api' : 'http://localhost:3000/api');
 
@@ -300,6 +301,7 @@ function App() {
         <div style={{ display: 'flex', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', padding: '0.3rem', borderRadius: '12px' }}>
           <button className={`btn ${engineMode === 'reels' ? '' : 'btn-secondary'}`} style={{ padding: '0.5rem 1rem' }} onClick={() => setEngineMode('reels')}>🎬 Reel Engine</button>
           <button className={`btn ${engineMode === 'youtube' ? '' : 'btn-secondary'}`} style={{ padding: '0.5rem 1rem' }} onClick={() => setEngineMode('youtube')}>📺 YouTube Engine</button>
+          <button className={`btn ${engineMode === 'metaads' ? '' : 'btn-secondary'}`} style={{ padding: '0.5rem 1rem' }} onClick={() => setEngineMode('metaads')}>🎯 Meta Ads Agent</button>
         </div>
       </header>
 
@@ -385,7 +387,7 @@ function App() {
           {view === 'hooks' && <HookLibraryView hookLibrary={hookLibrary} setHookLibrary={setHookLibrary} />}
           {view === 'topic' && currentTopic && <TopicDetail topic={currentTopic} updateTopic={updateTopic} onBack={() => setView('board')} setError={setError} sirStyleGuide={sirStyleGuide} learnFromFeedback={learnFromFeedback} creatorReferences={creatorReferences} targetAudiences={targetAudiences} brandVoices={brandVoices} thumbnailStyles={thumbnailStyles} editingStyles={editingStyles} hookLibrary={hookLibrary} videoFormats={videoFormats} activeCreatorId={activeCreatorId} activeAudienceId={activeAudienceId} />}
         </>
-      ) : (
+      ) : engineMode === 'youtube' ? (
         <YoutubeFactory
           activeAudience={targetAudiences.find(a => a.id === activeAudienceId)}
           activeBrandVoice={brandVoices.find(b => b.id === activeBrandVoiceId)}
@@ -394,6 +396,8 @@ function App() {
           activeCreator={creatorReferences.find(c => c.id === activeCreatorId)}
           sirStyleGuide={sirStyleGuide}
         />
+      ) : (
+        <MetaAdsFactory />
       )}
     </div>
   );
