@@ -204,13 +204,32 @@ app.post('/api/db/save', async (req, res) => {
           if (existingRow) {
             let updated = false;
             headers.forEach(h => {
-              const stringVal = typeof item[h] === 'object' ? JSON.stringify(item[h]) : String(item[h] !== undefined && item[h] !== null ? item[h] : '');
-              if (existingRow.get(h) !== stringVal) {
+              const incomingRaw = item[h];
+              const stringVal = typeof incomingRaw === 'object' ? JSON.stringify(incomingRaw) : String(incomingRaw !== undefined && incomingRaw !== null ? incomingRaw : '');
+
+              let currentStr = existingRow.get(h);
+              if (currentStr === undefined || currentStr === null) currentStr = '';
+              else currentStr = String(currentStr);
+
+              let normalizedCurrentStr = currentStr;
+              if (typeof incomingRaw === 'object' && incomingRaw !== null) {
+                try {
+                  // Normalize the spacing and key ordering of the existing string
+                  normalizedCurrentStr = JSON.stringify(JSON.parse(currentStr));
+                } catch (e) {
+                  normalizedCurrentStr = currentStr;
+                }
+              }
+
+              if (normalizedCurrentStr !== stringVal) {
                 existingRow.set(h, stringVal);
                 updated = true;
               }
             });
-            if (updated) await existingRow.save();
+            if (updated) {
+              await existingRow.save();
+              await new Promise(r => setTimeout(r, 400)); // Sleep 400ms to avoid bursting rate limits
+            }
           } else {
             const rowObj = {};
             headers.forEach(h => {
@@ -257,9 +276,23 @@ app.post('/api/db/save', async (req, res) => {
         const stringVal = typeof v === 'object' ? JSON.stringify(v) : String(v);
         const existingRow = existingRows.find(r => r.get('Key') === k);
         if (existingRow) {
-          if (existingRow.get('Value') !== stringVal) {
+          let currentStr = existingRow.get('Value');
+          if (currentStr === undefined || currentStr === null) currentStr = '';
+          else currentStr = String(currentStr);
+
+          let normalizedCurrentStr = currentStr;
+          if (typeof v === 'object' && v !== null) {
+            try {
+              normalizedCurrentStr = JSON.stringify(JSON.parse(currentStr));
+            } catch (e) {
+              normalizedCurrentStr = currentStr;
+            }
+          }
+
+          if (normalizedCurrentStr !== stringVal) {
             existingRow.set('Value', stringVal);
             await existingRow.save();
+            await new Promise(r => setTimeout(r, 400)); // Rate limit buffer
           }
         } else {
           rowsToAdd.push({ Key: k, Value: stringVal });
