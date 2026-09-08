@@ -25,6 +25,11 @@ const ytAiRouter = require('./routes/youtubeAi');
 app.use('/api/yt', ytRouter);
 app.use('/api/yt', ytAiRouter);
 
+const adsScriptDataRouter = require('./routes/adsScriptData');
+const adsScriptAiRouter = require('./routes/adsScriptAi');
+app.use('/api/ads', adsScriptDataRouter);
+app.use('/api/ads', adsScriptAiRouter);
+
 // Local support for Vercel Serverless endpoints
 app.post('/api/youtube/generate', require('./api/youtube/generate'));
 app.post('/api/youtube/status', require('./api/youtube/status'));
