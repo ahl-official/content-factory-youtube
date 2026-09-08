@@ -72,9 +72,10 @@ async function createProject({ topic, audienceId }) {
 
 async function updateProject(projectId, updates) {
     const col = await getCollection();
+    const { _id, ...safeUpdates } = updates || {};
     const res = await col.findOneAndUpdate(
         { _id: projectId },
-        { $set: { ...updates, updatedAt: new Date().toISOString() } },
+        { $set: { ...safeUpdates, updatedAt: new Date().toISOString() } },
         { returnDocument: 'after' }
     );
     return res?.value || res;
