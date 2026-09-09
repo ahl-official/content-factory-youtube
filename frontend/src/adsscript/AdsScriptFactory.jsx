@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const API_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api');
 
@@ -7,6 +7,12 @@ const STAGE_LABELS = {
   angles_generated: 'Angles Ready',
   script_ready: 'Script Ready ✓'
 };
+
+const STEPS = [
+  { key: 'angle', label: 'Ad Angle' },
+  { key: 'script', label: 'Script Writer' },
+  { key: 'audit', label: 'Audit & Finalize' }
+];
 
 /*
  * Ads Script Writer — a focused, native pipeline for writing Meta ad scripts
@@ -109,6 +115,61 @@ export default function AdsScriptFactory({ activeAudience, targetAudiences = [],
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
+   SHARED BITS — copy button, spinner hint
+───────────────────────────────────────────────────────────────────────── */
+function legacyCopy(text) {
+  // Fallback for when the async Clipboard API is unavailable or its permission is denied
+  // (both real cases, not just headless browsers) — execCommand uses a different, older
+  // permission model that often still works from a direct click handler.
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+  let succeeded = false;
+  try {
+    succeeded = document.execCommand('copy');
+  } catch (e) {
+    succeeded = false;
+  }
+  document.body.removeChild(textarea);
+  return succeeded;
+}
+
+function CopyButton({ text, label = 'Copy Script' }) {
+  const [status, setStatus] = useState('idle'); // 'idle' | 'copied' | 'failed'
+  const handleCopy = async () => {
+    let succeeded = false;
+    try {
+      await navigator.clipboard.writeText(text || '');
+      succeeded = true;
+    } catch (e) {
+      succeeded = legacyCopy(text || '');
+    }
+    setStatus(succeeded ? 'copied' : 'failed');
+    setTimeout(() => setStatus('idle'), 1800);
+  };
+  const label2 = status === 'copied' ? '✓ Copied' : status === 'failed' ? '⚠️ Copy failed — select manually' : `📋 ${label}`;
+  return (
+    <button className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={handleCopy}>
+      {label2}
+    </button>
+  );
+}
+
+function GeneratingHint({ show, text = 'This can take up to ~30 seconds...' }) {
+  if (!show) return null;
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.6rem' }}>
+      <div className="loader" style={{ width: '16px', height: '16px', borderWidth: '2px' }} />
+      {text}
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
    DASHBOARD
 ───────────────────────────────────────────────────────────────────────── */
 function AdsDashboard({ projects, loading, error, targetAudiences, onOpen, onDelete }) {
@@ -130,7 +191,8 @@ function AdsDashboard({ projects, loading, error, targetAudiences, onOpen, onDel
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.2rem' }}>
       {projects.map(p => {
         const audience = targetAudiences.find(a => a.id === p.audienceId);
-        const versionCount = p.scriptVersions?.length || 0;
+        const versions = p.scriptVersions || [];
+        const latestVersion = versions.length ? versions.reduce((a, b) => (a.version > b.version ? a : b)) : null;
         return (
           <div key={p._id} className="glass-panel" style={{ margin: 0, padding: '1.2rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
             <h3 style={{ fontSize: '1.05rem', margin: 0 }}>{p.topic}</h3>
@@ -138,8 +200,17 @@ function AdsDashboard({ projects, loading, error, targetAudiences, onOpen, onDel
               Audience: {audience?.name || 'Unassigned'}
             </div>
             <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-              Status: {STAGE_LABELS[p.status] || p.status} · {versionCount} version{versionCount === 1 ? '' : 's'}
+              Status: {STAGE_LABELS[p.status] || p.status} · {versions.length} version{versions.length === 1 ? '' : 's'}
             </div>
+            {latestVersion && (
+              <div style={{
+                fontSize: '0.78rem', color: '#a5b4fc', background: 'rgba(99,102,241,0.08)',
+                border: '1px solid rgba(99,102,241,0.2)', borderRadius: '8px', padding: '0.5rem 0.7rem',
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+              }}>
+                📝 v{latestVersion.version}: "{latestVersion.script?.hook}"
+              </div>
+            )}
             <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
               <button className="btn" style={{ flex: 1, padding: '0.5rem 0.8rem' }} onClick={() => onOpen(p._id)}>Open</button>
               <button className="btn btn-secondary" style={{ padding: '0.5rem 0.8rem' }} onClick={() => onDelete(p._id)}>🗑</button>
@@ -193,17 +264,33 @@ function AdsNewProject({ targetAudiences, activeAudience, onCreate }) {
           No target audiences defined yet. Add one under 🎯 Target Audience in the Reel Engine first.
         </p>
       ) : (
-        <select
-          className="input-field"
-          value={audienceId}
-          onChange={e => setAudienceId(e.target.value)}
-          style={{ marginBottom: '1.2rem' }}
-        >
-          <option value="">Select an audience...</option>
-          {targetAudiences.map(a => (
-            <option key={a.id} value={a.id}>{a.name}</option>
-          ))}
-        </select>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.75rem', marginBottom: '1.2rem' }}>
+          {targetAudiences.map(a => {
+            const isSelected = audienceId === a.id;
+            return (
+              <div
+                key={a.id}
+                onClick={() => setAudienceId(a.id)}
+                title={a.notes}
+                style={{
+                  cursor: 'pointer', borderRadius: '10px', padding: '0.9rem',
+                  background: isSelected ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.03)',
+                  border: isSelected ? '1px solid #10b981' : '1px solid var(--panel-border)'
+                }}
+              >
+                <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.3rem' }}>
+                  {isSelected ? '🟢 ' : ''}{a.name}
+                </div>
+                <div style={{
+                  fontSize: '0.75rem', color: 'var(--text-muted)', overflow: 'hidden',
+                  display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical'
+                }}>
+                  {a.notes}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
 
       {error && <p style={{ color: '#fca5a5', fontSize: '0.85rem', marginBottom: '1rem' }}>⚠️ {error}</p>}
@@ -216,10 +303,131 @@ function AdsNewProject({ targetAudiences, activeAudience, onCreate }) {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
+   STEPPER
+───────────────────────────────────────────────────────────────────────── */
+function Stepper({ activeStep, isDone, isReachable, onJump }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1.5rem' }}>
+      {STEPS.map((step, i) => {
+        const active = step.key === activeStep;
+        const done = isDone(step.key);
+        const reachable = isReachable(step.key);
+        const clickable = reachable && !active;
+        return (
+          <div key={step.key} style={{ display: 'flex', alignItems: 'center', flex: i < STEPS.length - 1 ? 1 : 'none' }}>
+            <div
+              onClick={() => clickable && onJump(step.key)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '0.5rem',
+                cursor: clickable ? 'pointer' : 'default',
+                opacity: reachable ? 1 : 0.4
+              }}
+            >
+              <div style={{
+                width: '28px', height: '28px', borderRadius: '50%', flexShrink: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '0.8rem', fontWeight: 700,
+                background: active ? 'linear-gradient(135deg, var(--primary), var(--secondary))' : done ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.05)',
+                border: active ? 'none' : done ? '1px solid #10b981' : '1px solid var(--panel-border)',
+                color: active ? '#fff' : done ? '#6ee7b7' : 'var(--text-muted)'
+              }}>
+                {done && !active ? '✓' : i + 1}
+              </div>
+              <span style={{ fontSize: '0.85rem', fontWeight: active ? 600 : 400, color: active ? 'var(--text-main)' : 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                {step.label}
+              </span>
+            </div>
+            {i < STEPS.length - 1 && (
+              <div style={{ flex: 1, height: '1px', background: done ? '#10b981' : 'var(--panel-border)', margin: '0 0.75rem', opacity: done ? 0.5 : 1 }} />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function CompletedStepSummary({ title, snippet, onEdit }) {
+  return (
+    <div style={{
+      display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem',
+      padding: '0.75rem 1rem', background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.25)',
+      borderRadius: '10px', marginBottom: '0.75rem', fontSize: '0.85rem'
+    }}>
+      <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'baseline', minWidth: 0 }}>
+        <span style={{ color: '#6ee7b7', flexShrink: 0 }}>✓</span>
+        <span style={{ fontWeight: 600, flexShrink: 0 }}>{title}</span>
+        {snippet && <span style={{ color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{snippet}</span>}
+      </div>
+      <button className="btn btn-secondary" style={{ padding: '0.3rem 0.7rem', fontSize: '0.75rem', flexShrink: 0 }} onClick={onEdit}>Edit</button>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   VERSION HISTORY
+───────────────────────────────────────────────────────────────────────── */
+function VersionHistory({ versions }) {
+  const [expanded, setExpanded] = useState(() => new Set(versions.length ? [versions[0].version] : []));
+  const toggle = (v) => setExpanded(prev => {
+    const next = new Set(prev);
+    if (next.has(v)) next.delete(v); else next.add(v);
+    return next;
+  });
+
+  return (
+    <div className="glass-panel">
+      <h3 style={{ marginBottom: '1rem' }}>Saved Versions ({versions.length})</h3>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        {versions.map(v => {
+          const isOpen = expanded.has(v.version);
+          return (
+            <div key={v.version} style={{ border: '1px solid var(--panel-border)', borderRadius: '10px', overflow: 'hidden' }}>
+              <button
+                onClick={() => toggle(v.version)}
+                style={{
+                  width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  padding: '0.9rem 1rem', background: 'rgba(255,255,255,0.02)', border: 'none',
+                  color: 'var(--text-main)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.9rem', textAlign: 'left'
+                }}
+              >
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontWeight: 600, minWidth: 0 }}>
+                  <span style={{ display: 'inline-block', transition: 'transform 0.2s', transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)', flexShrink: 0 }}>▸</span>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    v{v.version} — {v.angleUsed?.angleTitle || 'Untitled angle'}
+                  </span>
+                </span>
+                <span style={{ color: 'var(--text-muted)', fontWeight: 400, fontSize: '0.8rem', flexShrink: 0, marginLeft: '1rem' }}>
+                  {new Date(v.createdAt).toLocaleString()}
+                </span>
+              </button>
+              {isOpen && (
+                <div style={{ padding: '0 1rem 1rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.5rem' }}>
+                    <CopyButton text={v.script?.fullScript} />
+                  </div>
+                  <div className="script-output">{v.script?.fullScript}</div>
+                  {v.auditNotes?.length > 0 && (
+                    <ul style={{ paddingLeft: '1.2rem', color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.75rem' }}>
+                      {v.auditNotes.map((note, i) => <li key={i}>{note}</li>)}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
    WORKSPACE — Angle -> Script -> Audit
 ───────────────────────────────────────────────────────────────────────── */
 function AdsWorkspace({ project: initialProject, targetAudiences, onBack, onProjectUpdated }) {
   const [project, setProject] = useState(initialProject);
+  const [activeStep, setActiveStep] = useState('angle');
   const [selectedAngleId, setSelectedAngleId] = useState(null);
   const [draftScript, setDraftScript] = useState(null);
   const [auditResult, setAuditResult] = useState(null);
@@ -230,8 +438,26 @@ function AdsWorkspace({ project: initialProject, targetAudiences, onBack, onProj
   const [runningStage, setRunningStage] = useState(null); // 'angle' | 'script' | 'audit' | null
   const [errorMsg, setErrorMsg] = useState(null);
 
+  const activePanelRef = useRef(null);
+  useEffect(() => {
+    activePanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [activeStep]);
+
   const audience = targetAudiences.find(a => a.id === project.audienceId);
   const selectedAngle = (project.angleOptions || []).find(a => a.id === selectedAngleId);
+
+  const isDone = (key) => {
+    if (key === 'angle') return (project.angleOptions?.length || 0) > 0;
+    if (key === 'script') return !!draftScript;
+    if (key === 'audit') return !!auditResult;
+    return false;
+  };
+  const isReachable = (key) => {
+    if (key === 'angle') return true;
+    if (key === 'script') return !!selectedAngle;
+    if (key === 'audit') return !!draftScript;
+    return false;
+  };
 
   const refreshProject = async () => {
     const res = await fetch(`${API_URL}/ads/projects/${project._id}`);
@@ -258,9 +484,18 @@ function AdsWorkspace({ project: initialProject, targetAudiences, onBack, onProj
     }
   };
 
+  const handleSelectAngle = (angleId) => {
+    if (angleId !== selectedAngleId) {
+      setSelectedAngleId(angleId);
+      setDraftScript(null);
+      setAuditResult(null);
+    }
+    setActiveStep('script');
+  };
+
   const handleGenerateAngles = async () => {
     try {
-      const result = await runStage('angle', { audience, feedback: angleFeedback || null });
+      await runStage('angle', { audience, feedback: angleFeedback || null });
       setAngleFeedback('');
       setSelectedAngleId(null);
       setDraftScript(null);
@@ -278,6 +513,7 @@ function AdsWorkspace({ project: initialProject, targetAudiences, onBack, onProj
       setDraftScript(result.output);
       setAuditResult(null);
       setScriptFeedback('');
+      setActiveStep('audit');
     } catch (e) {
       setErrorMsg(e.message);
     }
@@ -292,6 +528,13 @@ function AdsWorkspace({ project: initialProject, targetAudiences, onBack, onProj
     } catch (e) {
       setErrorMsg(e.message);
     }
+  };
+
+  const handleWriteAnother = () => {
+    setSelectedAngleId(null);
+    setDraftScript(null);
+    setAuditResult(null);
+    setActiveStep('angle');
   };
 
   const versions = [...(project.scriptVersions || [])].sort((a, b) => b.version - a.version);
@@ -312,126 +555,147 @@ function AdsWorkspace({ project: initialProject, targetAudiences, onBack, onProj
         </div>
       )}
 
-      {/* STAGE 1: AD ANGLES */}
-      <div className="glass-panel">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
-          <h3 style={{ margin: 0 }}>1. Ad Angle Agent</h3>
-          <button className="btn" disabled={runningStage !== null} onClick={handleGenerateAngles}>
-            {runningStage === 'angle' ? 'Generating...' : (project.angleOptions?.length ? 'Regenerate Angles' : 'Generate Angles')}
-          </button>
-        </div>
+      <Stepper activeStep={activeStep} isDone={isDone} isReachable={isReachable} onJump={setActiveStep} />
 
-        {(project.angleOptions?.length || 0) === 0 ? (
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No angles generated yet.</p>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
-            {project.angleOptions.map(angle => {
-              const isSelected = selectedAngleId === angle.id;
-              return (
-                <div
-                  key={angle.id}
-                  onClick={() => { setSelectedAngleId(angle.id); setDraftScript(null); setAuditResult(null); }}
-                  style={{
-                    cursor: 'pointer', borderRadius: '10px', padding: '1rem',
-                    background: isSelected ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.03)',
-                    border: isSelected ? '1px solid #10b981' : '1px solid var(--panel-border)'
-                  }}
-                >
-                  <div style={{ fontWeight: 600, marginBottom: '0.4rem' }}>{angle.angleTitle}</div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>"{angle.hookLine}"</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    {angle.awarenessStage} · Pain point: {angle.audiencePainPoint}
-                  </div>
-                  {isSelected && <div style={{ marginTop: '0.5rem', color: '#6ee7b7', fontSize: '0.8rem' }}>🟢 Selected</div>}
-                </div>
-              );
-            })}
-          </div>
+      <div ref={activePanelRef}>
+        {/* Completed-step summaries above the active panel */}
+        {activeStep !== 'angle' && selectedAngle && (
+          <CompletedStepSummary
+            title={selectedAngle.angleTitle}
+            snippet={`"${selectedAngle.hookLine}"`}
+            onEdit={() => setActiveStep('angle')}
+          />
+        )}
+        {activeStep === 'audit' && draftScript && (
+          <CompletedStepSummary
+            title="Draft script written"
+            snippet={draftScript.hook}
+            onEdit={() => setActiveStep('script')}
+          />
         )}
 
-        <textarea
-          className="input-field"
-          placeholder="Feedback for regeneration (optional)"
-          value={angleFeedback}
-          onChange={e => setAngleFeedback(e.target.value)}
-          style={{ minHeight: '60px', resize: 'vertical' }}
-        />
-      </div>
-
-      {/* STAGE 2: SCRIPT WRITER */}
-      <div className="glass-panel" style={{ opacity: selectedAngle ? 1 : 0.5 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
-          <h3 style={{ margin: 0 }}>2. Script Writer Agent</h3>
-          <button className="btn" disabled={!selectedAngle || runningStage !== null} onClick={handleGenerateScript}>
-            {runningStage === 'script' ? 'Writing...' : (draftScript ? 'Regenerate Draft' : 'Generate Script')}
-          </button>
-        </div>
-
-        {!selectedAngle ? (
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Select an ad angle above first.</p>
-        ) : !draftScript ? (
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No draft generated yet for "{selectedAngle.angleTitle}".</p>
-        ) : (
-          <>
-            <div className="script-output" style={{ marginBottom: '1rem' }}>{draftScript.fullScript}</div>
-            <textarea
-              className="input-field"
-              placeholder="Feedback for a revised draft (optional)"
-              value={scriptFeedback}
-              onChange={e => setScriptFeedback(e.target.value)}
-              style={{ minHeight: '60px', resize: 'vertical' }}
-            />
-          </>
-        )}
-      </div>
-
-      {/* STAGE 3: AUDIT & FINALIZE */}
-      <div className="glass-panel" style={{ opacity: draftScript ? 1 : 0.5 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
-          <h3 style={{ margin: 0 }}>3. Audit Agent</h3>
-          <button className="btn" disabled={!draftScript || runningStage !== null} onClick={handleAudit}>
-            {runningStage === 'audit' ? 'Auditing...' : 'Audit & Save Version'}
-          </button>
-        </div>
-
-        {!draftScript ? (
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Generate a draft script first.</p>
-        ) : !auditResult ? (
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Not audited yet.</p>
-        ) : (
-          <>
-            <div style={{ marginBottom: '1rem' }}>
-              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>Audit Notes</div>
-              <ul style={{ paddingLeft: '1.2rem', color: '#e4e4e7', fontSize: '0.85rem' }}>
-                {auditResult.auditNotes.map((note, i) => <li key={i} style={{ marginBottom: '0.3rem' }}>{note}</li>)}
-              </ul>
+        {/* STAGE 1: AD ANGLES */}
+        {activeStep === 'angle' && (
+          <div className="glass-panel">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+              <h3 style={{ margin: 0 }}>1. Ad Angle Agent</h3>
+              <button className="btn" disabled={runningStage !== null} onClick={handleGenerateAngles}>
+                {runningStage === 'angle' ? 'Generating...' : (project.angleOptions?.length ? 'Regenerate Angles' : 'Generate Angles')}
+              </button>
             </div>
-            <div className="script-output">{auditResult.finalScript.fullScript}</div>
-          </>
+            <GeneratingHint show={runningStage === 'angle'} />
+
+            {(project.angleOptions?.length || 0) === 0 ? (
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: runningStage === 'angle' ? '0.75rem' : 0 }}>No angles generated yet.</p>
+            ) : (
+              <>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem', margin: '1rem 0' }}>
+                  {project.angleOptions.map(angle => {
+                    const isSelected = selectedAngleId === angle.id;
+                    return (
+                      <div
+                        key={angle.id}
+                        onClick={() => handleSelectAngle(angle.id)}
+                        style={{
+                          cursor: 'pointer', borderRadius: '10px', padding: '1rem',
+                          background: isSelected ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.03)',
+                          border: isSelected ? '1px solid #10b981' : '1px solid var(--panel-border)'
+                        }}
+                      >
+                        <div style={{ fontWeight: 600, marginBottom: '0.4rem' }}>{angle.angleTitle}</div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>"{angle.hookLine}"</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                          {angle.awarenessStage} · Pain point: {angle.audiencePainPoint}
+                        </div>
+                        {isSelected && <div style={{ marginTop: '0.5rem', color: '#6ee7b7', fontSize: '0.8rem' }}>🟢 Selected</div>}
+                      </div>
+                    );
+                  })}
+                </div>
+                <textarea
+                  className="input-field"
+                  placeholder="Feedback for regeneration (optional)"
+                  value={angleFeedback}
+                  onChange={e => setAngleFeedback(e.target.value)}
+                  style={{ minHeight: '60px', resize: 'vertical' }}
+                />
+              </>
+            )}
+          </div>
+        )}
+
+        {/* STAGE 2: SCRIPT WRITER */}
+        {activeStep === 'script' && selectedAngle && (
+          <div className="glass-panel">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+              <h3 style={{ margin: 0 }}>2. Script Writer Agent</h3>
+              <button className="btn" disabled={runningStage !== null} onClick={handleGenerateScript}>
+                {runningStage === 'script' ? 'Writing...' : (draftScript ? 'Regenerate Draft' : 'Generate Script')}
+              </button>
+            </div>
+            <GeneratingHint show={runningStage === 'script'} />
+
+            {!draftScript ? (
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: runningStage === 'script' ? '0.75rem' : 0 }}>
+                No draft generated yet for "{selectedAngle.angleTitle}".
+              </p>
+            ) : (
+              <>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', margin: '1rem 0 0.5rem' }}>
+                  <CopyButton text={draftScript.fullScript} />
+                </div>
+                <div className="script-output" style={{ marginBottom: '1rem' }}>{draftScript.fullScript}</div>
+                <textarea
+                  className="input-field"
+                  placeholder="Feedback for a revised draft (optional)"
+                  value={scriptFeedback}
+                  onChange={e => setScriptFeedback(e.target.value)}
+                  style={{ minHeight: '60px', resize: 'vertical' }}
+                />
+              </>
+            )}
+          </div>
+        )}
+
+        {/* STAGE 3: AUDIT & FINALIZE */}
+        {activeStep === 'audit' && draftScript && (
+          <div className="glass-panel">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+              <h3 style={{ margin: 0 }}>3. Audit Agent</h3>
+              <button className="btn" disabled={!!auditResult || runningStage !== null} onClick={handleAudit}>
+                {runningStage === 'audit' ? 'Auditing...' : auditResult ? 'Saved ✓' : 'Audit & Save Version'}
+              </button>
+            </div>
+            <GeneratingHint show={runningStage === 'audit'} />
+
+            {!auditResult ? (
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: runningStage === 'audit' ? '0.75rem' : 0 }}>Not audited yet.</p>
+            ) : (
+              <>
+                <div style={{ marginTop: '1rem', marginBottom: '1rem' }}>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>Audit Notes</div>
+                  <ul style={{ paddingLeft: '1.2rem', color: '#e4e4e7', fontSize: '0.85rem' }}>
+                    {auditResult.auditNotes.map((note, i) => <li key={i} style={{ marginBottom: '0.3rem' }}>{note}</li>)}
+                  </ul>
+                </div>
+                <div style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  marginBottom: '0.6rem'
+                }}>
+                  <span style={{ color: '#6ee7b7', fontWeight: 600, fontSize: '0.85rem' }}>✅ Final Script — saved as new version</span>
+                  <CopyButton text={auditResult.finalScript.fullScript} />
+                </div>
+                <div className="script-output" style={{ border: '1px solid #10b981' }}>{auditResult.finalScript.fullScript}</div>
+                <button className="btn btn-secondary" style={{ marginTop: '1rem' }} onClick={handleWriteAnother}>
+                  ✨ Write Another Version
+                </button>
+              </>
+            )}
+          </div>
         )}
       </div>
 
-      {/* VERSION HISTORY */}
-      {versions.length > 0 && (
-        <div className="glass-panel">
-          <h3 style={{ marginBottom: '1rem' }}>Saved Versions ({versions.length})</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {versions.map(v => (
-              <details key={v.version} style={{ border: '1px solid var(--panel-border)', borderRadius: '10px', padding: '1rem' }}>
-                <summary style={{ cursor: 'pointer', fontWeight: 600 }}>
-                  v{v.version} — {v.angleUsed?.angleTitle || 'Untitled angle'} <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>({new Date(v.createdAt).toLocaleString()})</span>
-                </summary>
-                <div className="script-output" style={{ marginTop: '1rem' }}>{v.script?.fullScript}</div>
-                {v.auditNotes?.length > 0 && (
-                  <ul style={{ paddingLeft: '1.2rem', color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.75rem' }}>
-                    {v.auditNotes.map((note, i) => <li key={i}>{note}</li>)}
-                  </ul>
-                )}
-              </details>
-            ))}
-          </div>
-        </div>
-      )}
+      {versions.length > 0 && <VersionHistory versions={versions} />}
     </div>
   );
 }
