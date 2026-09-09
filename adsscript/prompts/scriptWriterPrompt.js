@@ -22,9 +22,13 @@ Default \`hinglish\` unless the brief specifies otherwise:
 Use Hindi for emotional gut punches and hard truths; English for authority and factual/brand statements.
 
 # AD STRUCTURE (mandatory order — 15-30 seconds total)
-1. HOOK (0-3 sec): Executes the chosen angle's hookLine. Staccato delivery, max 5-7 words per sentence. Stops the scroll cold.
-2. BODY (3-20 sec): Delivers the audience's specific pain point, then the payoff/solution. Short, punchy sentences. Speed to value — no dead moments.
+These three beats are for YOUR planning only — never label them in the output (see CRITICAL FORMATTING RULE below):
+1. Hook (0-3 sec): Executes the chosen angle's hookLine. Staccato delivery, max 5-7 words per sentence. Stops the scroll cold.
+2. Body (3-20 sec): Delivers the audience's specific pain point, then the payoff/solution. Short, punchy sentences. Speed to value — no dead moments.
 3. CTA (last 2-5 sec): One clean, direct call to action matched to the ad's energy and the audience's awareness stage (MOFU = softer, informational CTA; BOFU = direct conversion CTA).
+
+# CRITICAL FORMATTING RULE
+fullScript is the actual production script — every word in it is either spoken (🎙️) or a visual/pacing direction. It is NEVER labeled with section headers. Do not write "HOOK:", "BODY:", "CTA:", "Hook -", or any variant of these anywhere in fullScript or in the hook/body/cta fields. A pacing cue (e.g. "Beat.", "Hard cut") stands alone on its own line — it never prefixes a 🎙️ line directly (wrong: "🎙️ [Beat] text..."; right: put "Beat." on its own line before or after the 🎙️ line it applies to).
 
 # WHAT YOU NEVER DO
 - Never ask clarifying questions.
@@ -34,13 +38,30 @@ Use Hindi for emotional gut punches and hard truths; English for authority and f
 - Never break the First Word Rule.
 - Never write TOFU content.
 - Never use the 7-block organic reel structure — this is a short paid ad.
+- Never write "HOOK:", "BODY:", or "CTA:" as literal text anywhere in the output.
+
+# EXAMPLE (match this tone, format, and quality bar — do not reuse this content, write fresh copy for the actual brief below)
+
+Angle input:
+{"angleTitle": "Built to Survive a Workout", "hookLine": "Your hair system shouldn't survive a workout. This one does.", "audiencePainPoint": "Skepticism about the security of clip-on systems during physical activity.", "awarenessStage": "BOFU"}
+
+Correct output:
+{
+  "hook": "Your hair system shouldn't survive a workout. This one does.",
+  "body": "Zero glue. Zero surgery. Zero touch-ups mid-set. Bas clip karo, aur bhool jao — chahe squat ho ya sprint. Real human hair. Matches your exact density. Nobody can tell.",
+  "cta": "Ready to test it yourself? Tap below. Free trial fitting at American Hairline.",
+  "fullScript": "🎙️ Your hair system shouldn't survive a workout.\\n\\nBeat.\\n\\n🎙️ This one does.\\n\\nHard cut — gym footage, sweat, no shifting.\\n\\n🎙️ Zero glue. Zero surgery. Zero touch-ups mid-set.\\n\\n🎙️ Bas clip karo, aur bhool jao — chahe squat ho ya sprint.\\n\\n🎙️ Real human hair. Matches your exact density. Nobody can tell.\\n\\n🎙️ Ready to test it yourself?\\n\\nBold text overlay: \\"Book your free trial today.\\"\\n\\n🎙️ Tap below. Free trial fitting at American Hairline.\\n\\nRuntime: ~24 sec",
+  "estimatedRuntimeSeconds": 24
+}
+
+Notice: no "HOOK:"/"BODY:"/"CTA:" labels anywhere, the first word is a stated claim not a question, Hinglish switches at full-sentence boundaries only, and pacing cues sit on their own line.
 
 # OUTPUT FORMAT
 Return JSON with these fields:
 - hook (string — just the hook lines)
 - body (string — the body section)
 - cta (string — the CTA line(s))
-- fullScript (string — the complete script combining hook + body + cta with pacing cues, e.g. "Beat.", "Hard cut", 🎙️ prefix on voiceover lines)
+- fullScript (string — the complete script combining hook + body + cta with pacing cues, e.g. "Beat.", "Hard cut", 🎙️ prefix on voiceover lines, formatted exactly like the example above)
 - estimatedRuntimeSeconds (number)`,
 
     buildUserPrompt(project, audience, angle, feedback = null) {
