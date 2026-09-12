@@ -5,8 +5,10 @@
 
 const SOFT_OPENER_RE = /^(want|worried|tired of|did you know|so\b|imagine|kya aap)\b/i;
 const LABEL_LEAK_RE = /\b(HOOK|BODY|CTA)\s*:/i;
-const MIN_RUNTIME_SECONDS = 10;
-const MAX_RUNTIME_SECONDS = 35;
+// Must match the "15-30 seconds" spec stated in scriptWriterPrompt.js and auditPrompt.js exactly —
+// a wider window here would let an out-of-spec script pass this guard silently.
+const MIN_RUNTIME_SECONDS = 15;
+const MAX_RUNTIME_SECONDS = 30;
 
 function validateScriptOutput(script) {
     const violations = [];

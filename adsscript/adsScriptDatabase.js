@@ -87,14 +87,34 @@ async function deleteProject(projectId) {
     return res.deletedCount > 0;
 }
 
-async function addScriptVersion(projectId, versionRecord) {
+// versionData must NOT include `version` — it's computed atomically here from the
+// document's current scriptVersions length via an aggregation-pipeline update, so
+// concurrent audit calls for the same project (double-click, two tabs) can't both read
+// the same stale length and persist duplicate version numbers the way a plain
+// read-then-$push from application code would.
+async function addScriptVersion(projectId, versionData) {
     const col = await getCollection();
     const res = await col.findOneAndUpdate(
         { _id: projectId },
-        {
-            $push: { scriptVersions: versionRecord },
-            $set: { status: 'script_ready', updatedAt: new Date().toISOString() }
-        },
+        [
+            {
+                $set: {
+                    scriptVersions: {
+                        $concatArrays: [
+                            { $ifNull: ['$scriptVersions', []] },
+                            [{
+                                $mergeObjects: [
+                                    versionData,
+                                    { version: { $add: [{ $size: { $ifNull: ['$scriptVersions', []] } }, 1] } }
+                                ]
+                            }]
+                        ]
+                    },
+                    status: 'script_ready',
+                    updatedAt: new Date().toISOString()
+                }
+            }
+        ],
         { returnDocument: 'after' }
     );
     return res?.value || res;

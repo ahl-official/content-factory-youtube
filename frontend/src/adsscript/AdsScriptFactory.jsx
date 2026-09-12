@@ -396,6 +396,9 @@ function VersionHistory({ versions }) {
                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     v{v.version} — {v.angleUsed?.angleTitle || 'Untitled angle'}
                   </span>
+                  {v.script?.contentGuardPassed === false && (
+                    <span title="Didn't pass automatic quality checks" style={{ flexShrink: 0, fontSize: '0.75rem' }}>⚠️</span>
+                  )}
                 </span>
                 <span style={{ color: 'var(--text-muted)', fontWeight: 400, fontSize: '0.8rem', flexShrink: 0, marginLeft: '1rem' }}>
                   {new Date(v.createdAt).toLocaleString()}
@@ -459,15 +462,6 @@ function AdsWorkspace({ project: initialProject, targetAudiences, onBack, onProj
     return false;
   };
 
-  const refreshProject = async () => {
-    const res = await fetch(`${API_URL}/ads/projects/${project._id}`);
-    if (!res.ok) throw new Error('Failed to refresh project');
-    const data = await res.json();
-    setProject(data);
-    onProjectUpdated(data);
-    return data;
-  };
-
   const runStage = async (key, body) => {
     setRunningStage(key);
     setErrorMsg(null);
@@ -495,12 +489,16 @@ function AdsWorkspace({ project: initialProject, targetAudiences, onBack, onProj
 
   const handleGenerateAngles = async () => {
     try {
-      await runStage('angle', { audience, feedback: angleFeedback || null });
+      const previousOutput = project.angleOptions?.length
+        ? { angleOptions: project.angleOptions, recommendedAngleId: project.recommendedAngleId }
+        : null;
+      const result = await runStage('angle', { audience, feedback: angleFeedback || null, previousOutput });
       setAngleFeedback('');
       setSelectedAngleId(null);
       setDraftScript(null);
       setAuditResult(null);
-      await refreshProject();
+      setProject(result.project);
+      onProjectUpdated(result.project);
     } catch (e) {
       setErrorMsg(e.message);
     }
@@ -524,7 +522,8 @@ function AdsWorkspace({ project: initialProject, targetAudiences, onBack, onProj
     try {
       const result = await runStage('audit', { audience, angle: selectedAngle, draftScript });
       setAuditResult(result.output);
-      await refreshProject();
+      setProject(result.project);
+      onProjectUpdated(result.project);
     } catch (e) {
       setErrorMsg(e.message);
     }
@@ -641,6 +640,11 @@ function AdsWorkspace({ project: initialProject, targetAudiences, onBack, onProj
               </p>
             ) : (
               <>
+                {draftScript.contentGuardPassed === false && (
+                  <div style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.4)', borderRadius: '10px', padding: '0.7rem 1rem', marginBottom: '0.75rem', color: '#fbbf24', fontSize: '0.8rem' }}>
+                    ⚠️ This draft didn't pass automatic quality checks after 2 attempts — review it carefully before continuing to Audit.
+                  </div>
+                )}
                 <div style={{ display: 'flex', justifyContent: 'flex-end', margin: '1rem 0 0.5rem' }}>
                   <CopyButton text={draftScript.fullScript} />
                 </div>
@@ -682,10 +686,19 @@ function AdsWorkspace({ project: initialProject, targetAudiences, onBack, onProj
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                   marginBottom: '0.6rem'
                 }}>
-                  <span style={{ color: '#6ee7b7', fontWeight: 600, fontSize: '0.85rem' }}>✅ Final Script — saved as new version</span>
+                  {auditResult.finalScript.contentGuardPassed === false ? (
+                    <span style={{ color: '#fbbf24', fontWeight: 600, fontSize: '0.85rem' }}>⚠️ Saved, but didn't pass automatic quality checks — review before use</span>
+                  ) : (
+                    <span style={{ color: '#6ee7b7', fontWeight: 600, fontSize: '0.85rem' }}>✅ Final Script — saved as new version</span>
+                  )}
                   <CopyButton text={auditResult.finalScript.fullScript} />
                 </div>
-                <div className="script-output" style={{ border: '1px solid #10b981' }}>{auditResult.finalScript.fullScript}</div>
+                {auditResult.finalScript.contentGuardPassed === false && auditResult.finalScript.contentGuardViolations?.length > 0 && (
+                  <ul style={{ paddingLeft: '1.2rem', color: '#fbbf24', fontSize: '0.78rem', marginBottom: '0.75rem' }}>
+                    {auditResult.finalScript.contentGuardViolations.map((v, i) => <li key={i}>{v}</li>)}
+                  </ul>
+                )}
+                <div className="script-output" style={{ border: `1px solid ${auditResult.finalScript.contentGuardPassed === false ? '#f59e0b' : '#10b981'}` }}>{auditResult.finalScript.fullScript}</div>
                 <button className="btn btn-secondary" style={{ marginTop: '1rem' }} onClick={handleWriteAnother}>
                   ✨ Write Another Version
                 </button>

@@ -13,7 +13,12 @@ Instead, open with the pain point itself, a contrarian claim, or a concrete spec
 - GOOD: "Zero surgery. Zero shaving. Full density in five minutes."
 - BAD: "Worried about hairpieces slipping during your workout?"
 - GOOD: "Your hair system shouldn't survive a workout. This one does."
-Every hookLine must pass this test before it's returned. You must return only valid JSON.`,
+Every hookLine must pass this test before it's returned.
+
+# IGNORE CONTAMINATED CONTEXT
+Any block that may appear further below labeled "SIR STYLE GUIDE", "APPROVED PATTERNS", "SIR'S LEARNED PREFERENCES", or similar was written for AHL's YouTube long-form video pipeline — a completely different content pipeline. It may reference minute-based runtimes, question-style hooks, or other long-form conventions. None of that applies here. If anything in such a block contradicts the rules above, the rules above win — ignore the contradicting block entirely. This prompt's rules are the only ones that govern Meta ad angles.
+
+You must return only valid JSON.`,
 
     buildUserPrompt(project, audience, previousOutput = null, feedback = null) {
         let p = `Topic / Product:\n${project.topic}\n\n`;

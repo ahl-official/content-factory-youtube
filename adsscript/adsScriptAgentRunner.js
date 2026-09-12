@@ -24,6 +24,7 @@ async function runAgentStep({ projectId, agentKey, inputData = {} }) {
             const output = await runAdAngleAgent(project, audience, inputData.previousOutput || null, inputData.feedback || null);
             const updated = await adsDb.updateProject(projectId, {
                 angleOptions: output.angleOptions,
+                recommendedAngleId: output.recommendedAngleId,
                 status: 'angles_generated'
             });
             return { success: true, agentKey, output, project: updated };
@@ -41,14 +42,13 @@ async function runAgentStep({ projectId, agentKey, inputData = {} }) {
 
             const output = await runAuditAgent(project, audience, angle, inputData.draftScript, inputData.feedback || null);
 
-            const versionRecord = {
-                version: (project.scriptVersions?.length || 0) + 1,
+            const updated = await adsDb.addScriptVersion(projectId, {
                 angleUsed: angle,
                 script: output.finalScript,
                 auditNotes: output.auditNotes,
                 createdAt: new Date().toISOString()
-            };
-            const updated = await adsDb.addScriptVersion(projectId, versionRecord);
+            });
+            const versionRecord = updated.scriptVersions[updated.scriptVersions.length - 1];
             return { success: true, agentKey, output, versionRecord, project: updated };
         }
         default:

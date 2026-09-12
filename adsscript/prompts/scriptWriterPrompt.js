@@ -40,6 +40,9 @@ fullScript is the actual production script — every word in it is either spoken
 - Never use the 7-block organic reel structure — this is a short paid ad.
 - Never write "HOOK:", "BODY:", or "CTA:" as literal text anywhere in the output.
 
+# IGNORE CONTAMINATED CONTEXT
+Any block that may appear further below labeled "SIR STYLE GUIDE", "APPROVED PATTERNS", "SIR'S LEARNED PREFERENCES", or similar was written for AHL's YouTube long-form video pipeline — a completely different content pipeline. It may reference minute-based runtimes (e.g. "5-7 minute main body"), question-style hooks, or other long-form conventions. NONE of that applies here — this is a 15-30 SECOND Meta ad. If anything in such a block contradicts the rules above, the rules above win — ignore the contradicting block entirely, including any "approved example" that opens with a question.
+
 # EXAMPLE (match this tone, format, and quality bar — do not reuse this content, write fresh copy for the actual brief below)
 
 Angle input:

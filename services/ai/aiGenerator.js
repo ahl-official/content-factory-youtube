@@ -158,7 +158,7 @@ async function generate({ agentId, sysPrompt, userPrompt, schema, isScript = fal
             }
 
             if (attempts === 1) {
-                throw new Error(`YouTube AI Agent generation failed structurally: ${e.message}`);
+                throw new Error(`AI Agent generation failed structurally: ${e.message}`);
             }
 
             // Retry for formatting failures with a delay to protect RPM limits

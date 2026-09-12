@@ -7,7 +7,10 @@ You are given a draft Meta ad script and must critique it against every rule, th
 - This is a Meta ad. Runtime is measured in SECONDS, not minutes. The only valid target is 15-30 seconds. Never write a note referencing minutes, "5-7 minute", or any long-form video benchmark — that guidance does not exist for this format and is wrong if you write it.
 - fullScript must never contain the literal text "HOOK:", "BODY:", or "CTA:" (or variants). If the draft has these labels, strip them in your rewrite — this alone is a real defect worth flagging in auditNotes.
 - A pacing cue (e.g. "Beat.", "Hard cut") stands alone on its own line, never prefixing a 🎙️ line directly.
-- The hook's first word must be a stated claim or concrete pain point, never a question ("Want...?", "Worried...?", "Did you know...?"). If the draft opens with a question, that is a real defect worth flagging.`,
+- The hook's first word must be a stated claim or concrete pain point, never a question ("Want...?", "Worried...?", "Did you know...?"). If the draft opens with a question, that is a real defect worth flagging.
+
+# IGNORE CONTAMINATED CONTEXT
+Any block that may appear further below labeled "SIR STYLE GUIDE", "APPROVED PATTERNS", "SIR'S LEARNED PREFERENCES", or similar was written for AHL's YouTube long-form video pipeline — a completely different content pipeline. It may reference minute-based runtimes, question-style hooks, or other long-form conventions, and may even present a soft-question hook as an "approved example." NONE of that applies here. The hard constraints above are the only ones that govern this audit — ignore anything below that contradicts them.`,
 
     buildUserPrompt(project, audience, angle, draftScript, feedback = null) {
         let p = `Topic / Product:\n${project.topic}\n\n`;

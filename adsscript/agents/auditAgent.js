@@ -12,14 +12,18 @@ async function runAuditAgent(project, audience, angle, draftScript, feedback = n
     let userPrompt = promptGen.buildUserPrompt(project, audience, angle, draftScript, feedback);
 
     let lastOutput = null;
+    let lastViolations = null;
 
     for (let attempt = 1; attempt <= 2; attempt++) {
         const output = await generate({ agentId: 'ads_audit', sysPrompt, userPrompt, schema: adAuditSchema, isScript: true });
         const violations = validateScriptOutput(output.finalScript);
 
-        if (violations.length === 0) return output;
+        if (violations.length === 0) {
+            return { ...output, finalScript: { ...output.finalScript, contentGuardPassed: true } };
+        }
 
         lastOutput = output;
+        lastViolations = violations;
         console.warn(`[Audit Agent] Attempt ${attempt} finalScript still violated content rules:`, violations);
 
         if (attempt < 2) {
@@ -27,7 +31,12 @@ async function runAuditAgent(project, audience, angle, draftScript, feedback = n
         }
     }
 
-    return lastOutput;
+    // Both attempts still violated the rules — return the best-effort result, but flagged,
+    // so the caller/UI can warn the user instead of presenting it as a clean audit pass.
+    return {
+        ...lastOutput,
+        finalScript: { ...lastOutput.finalScript, contentGuardPassed: false, contentGuardViolations: lastViolations }
+    };
 }
 
 module.exports = { runAuditAgent };

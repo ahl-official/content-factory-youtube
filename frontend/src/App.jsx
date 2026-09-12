@@ -95,10 +95,26 @@ const ADS_SCRIPT_DEFAULT_AUDIENCES = [
   }
 ];
 
+const ADS_SCRIPT_SEED_FLAG = 'ahl_ads_script_defaults_seeded';
+
 function seedAdsScriptAudiences(existingAudiences) {
   const existing = Array.isArray(existingAudiences) ? existingAudiences : [];
+
+  // Seed at most once per browser, ever — not on every load. Checking "is this name
+  // missing" on every load can't distinguish "never created" from "user deliberately
+  // deleted it," so re-seeding unconditionally would silently undo a deletion forever
+  // and re-fire the Sheets autosave write this Mongo-backed engine exists to reduce.
+  // Once any client successfully seeds a name into Sheets, every other client finds it
+  // already present and just marks itself seeded without writing anything.
+  try {
+    if (localStorage.getItem(ADS_SCRIPT_SEED_FLAG) === 'true') return existing;
+  } catch (e) { /* localStorage unavailable — fall through and seed this session only */ }
+
   const existingNames = new Set(existing.map(a => (a.name || '').trim().toLowerCase()));
   const missing = ADS_SCRIPT_DEFAULT_AUDIENCES.filter(a => !existingNames.has(a.name.toLowerCase()));
+
+  try { localStorage.setItem(ADS_SCRIPT_SEED_FLAG, 'true'); } catch (e) { /* best effort */ }
+
   return missing.length > 0 ? [...existing, ...missing] : existing;
 }
 
