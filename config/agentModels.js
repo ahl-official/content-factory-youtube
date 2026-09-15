@@ -23,5 +23,10 @@ module.exports = {
     "8": { provider: "openrouter", model: aiModels.openRouter.smartLogic }, // thumbnail Designer
     "9": { provider: "openrouter", model: aiModels.openRouter.smartLogic },    // SEO (Needs smart JSON logic)
     "10.5": { provider: "openrouter", model: aiModels.openRouter.smartLogic }, // Creative iteration
-    "15": { provider: "openrouter", model: aiModels.openRouter.smartLogic } // Analytics
+    "15": { provider: "openrouter", model: aiModels.openRouter.smartLogic }, // Analytics
+
+    // 📢 ADS SCRIPT WRITER: native Meta ad script pipeline (adsscript/)
+    "ads_angle": { provider: "gemini", model: aiModels.gemini.fast }, // Ad Angle Agent
+    "ads_script": { provider: "gemini", model: aiModels.gemini.fast }, // Script Writer Agent
+    "ads_audit": { provider: "openrouter", model: aiModels.openRouter.smartLogic } // Audit Agent
 };

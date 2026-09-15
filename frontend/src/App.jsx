@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import YoutubeFactory from './youtube/YoutubeFactory';
 import MetaAdsFactory from './metaads/MetaAdsFactory';
+import AdsScriptFactory from './adsscript/AdsScriptFactory';
 
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '/api' : 'http://localhost:3000/api');
 
@@ -59,6 +60,62 @@ function createTopic(title, targetAudienceId = null, brandVoiceId = null) {
     hooks: [], // Generated hooks
     selectedHook: null, // Final approved hook
   };
+}
+
+// Default audience segments the Ads Script Writer engine expects to exist in the
+// shared targetAudiences list. Seeded once, by name, if missing — never duplicated.
+//
+// IDs are fixed slugs, not generated (e.g. Date.now()), on purpose: the Reel Factory
+// autosave to Google Sheets only fires while engineMode === 'reels' (see the DB-sync
+// effect below), so a user who opens the app straight into the Ads Script Writer may
+// never actually persist this seed. If the ID were regenerated per session, every
+// reload would silently orphan the audienceId already saved on Mongo ad script
+// projects. A fixed slug means re-seeding is idempotent even when the write never
+// makes it to Sheets.
+const ADS_SCRIPT_DEFAULT_AUDIENCES = [
+  {
+    id: 'ads-default-clip-on',
+    name: 'Clip-on',
+    notes: 'Wants instant density with zero commitment — no surgery, no shaving, removable same day. Skeptical it will look fake or slip. Cares about tactile realism and how quickly it can be put on/taken off.'
+  },
+  {
+    id: 'ads-default-customised-hair-system',
+    name: 'Customised hair system',
+    notes: 'Wants a solution built for their exact face shape, hair texture, and density needs, not an off-the-shelf product. Has likely tried a generic system before and been burned by a bad match. Responds to craftsmanship and precision, not price.'
+  },
+  {
+    id: 'ads-default-toppers',
+    name: 'Toppers',
+    notes: 'Dealing with crown/top thinning specifically, not full baldness. Wants to blend a topper seamlessly into their own remaining hair. Fears visible edges, mismatched color, or an "obvious wig" look at the hairline.'
+  },
+  {
+    id: 'ads-default-permanent-extensions',
+    name: 'Permanent Extensions',
+    notes: 'Ready for a high-commitment, low-maintenance solution — wants to forget it is even there. Values durability and realism over cost. Concerned about upkeep, attachment method, and how it holds up to daily life (gym, swimming, sleep).'
+  }
+];
+
+const ADS_SCRIPT_SEED_FLAG = 'ahl_ads_script_defaults_seeded';
+
+function seedAdsScriptAudiences(existingAudiences) {
+  const existing = Array.isArray(existingAudiences) ? existingAudiences : [];
+
+  // Seed at most once per browser, ever — not on every load. Checking "is this name
+  // missing" on every load can't distinguish "never created" from "user deliberately
+  // deleted it," so re-seeding unconditionally would silently undo a deletion forever
+  // and re-fire the Sheets autosave write this Mongo-backed engine exists to reduce.
+  // Once any client successfully seeds a name into Sheets, every other client finds it
+  // already present and just marks itself seeded without writing anything.
+  try {
+    if (localStorage.getItem(ADS_SCRIPT_SEED_FLAG) === 'true') return existing;
+  } catch (e) { /* localStorage unavailable — fall through and seed this session only */ }
+
+  const existingNames = new Set(existing.map(a => (a.name || '').trim().toLowerCase()));
+  const missing = ADS_SCRIPT_DEFAULT_AUDIENCES.filter(a => !existingNames.has(a.name.toLowerCase()));
+
+  try { localStorage.setItem(ADS_SCRIPT_SEED_FLAG, 'true'); } catch (e) { /* best effort */ }
+
+  return missing.length > 0 ? [...existing, ...missing] : existing;
 }
 
 /* ═══════════════════════════════════════════════
@@ -134,7 +191,7 @@ function App() {
         if (data.topics) setTopics(data.topics);
         if (data.sirStyleGuide) setSirStyleGuide(data.sirStyleGuide);
         if (data.creatorReferences) setCreatorReferences(data.creatorReferences);
-        if (data.targetAudiences) setTargetAudiences(data.targetAudiences);
+        setTargetAudiences(seedAdsScriptAudiences(data.targetAudiences || []));
         if (data.hookLibrary) setHookLibrary(data.hookLibrary);
 
         if (data.brandVoices && data.brandVoices.length > 0) {
@@ -301,6 +358,7 @@ function App() {
         <div style={{ display: 'flex', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', padding: '0.3rem', borderRadius: '12px' }}>
           <button className={`btn ${engineMode === 'reels' ? '' : 'btn-secondary'}`} style={{ padding: '0.5rem 1rem' }} onClick={() => setEngineMode('reels')}>🎬 Reel Engine</button>
           <button className={`btn ${engineMode === 'youtube' ? '' : 'btn-secondary'}`} style={{ padding: '0.5rem 1rem' }} onClick={() => setEngineMode('youtube')}>📺 YouTube Engine</button>
+          <button className={`btn ${engineMode === 'adsscript' ? '' : 'btn-secondary'}`} style={{ padding: '0.5rem 1rem' }} onClick={() => setEngineMode('adsscript')}>📢 Ads Script Writer</button>
           <button className={`btn ${engineMode === 'metaads' ? '' : 'btn-secondary'}`} style={{ padding: '0.5rem 1rem' }} onClick={() => setEngineMode('metaads')}>🎯 Meta Ads Agent</button>
         </div>
       </header>
@@ -394,6 +452,12 @@ function App() {
           activeEditingStyle={editingStyles.find(e => e.id === activeEditingStyleId)}
           activeThumbnailStyle={thumbnailStyles.find(t => t.id === activeThumbnailStyleId)}
           activeCreator={creatorReferences.find(c => c.id === activeCreatorId)}
+          sirStyleGuide={sirStyleGuide}
+        />
+      ) : engineMode === 'adsscript' ? (
+        <AdsScriptFactory
+          activeAudience={targetAudiences.find(a => a.id === activeAudienceId)}
+          targetAudiences={targetAudiences}
           sirStyleGuide={sirStyleGuide}
         />
       ) : (
