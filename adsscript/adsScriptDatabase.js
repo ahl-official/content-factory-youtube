@@ -13,12 +13,17 @@ function getDb() {
 
     const uri = process.env.ADS_MONGODB_URI;
     if (!uri) {
-        dbPromise = Promise.reject(new Error(
+        // Don't cache this rejection forever: in a serverless environment a warm container
+        // that happened to start before the env var was fully available would otherwise be
+        // stuck reporting "not set" for its entire lifetime, even after the var is fixed,
+        // since later calls short-circuit on the truthy `dbPromise` above without ever
+        // rechecking process.env. Re-checking on every call lets it self-heal.
+        const err = new Error(
             'ADS_MONGODB_URI is not set. The Ads Script Writer engine requires a MongoDB Atlas connection string in .env.'
-        ));
-        // Prevent an unhandled rejection warning for the startup probe; callers still get the rejection.
-        dbPromise.catch(() => { });
-        return dbPromise;
+        );
+        const rejected = Promise.reject(err);
+        rejected.catch(() => { }); // prevent an unhandled rejection warning for the startup probe
+        return rejected;
     }
 
     client = new MongoClient(uri);
