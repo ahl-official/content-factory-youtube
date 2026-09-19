@@ -2,6 +2,7 @@ const { generate } = require('../../services/ai/aiGenerator');
 const { adScriptSchema } = require('../adsScriptSchemas');
 const { validateScriptOutput } = require('../adsScriptValidation');
 const promptGen = require('../prompts/scriptWriterPrompt');
+const logger = require('../../logger');
 
 // Content-rule violations (soft-opener hooks, HOOK:/BODY:/CTA: label leakage, missing
 // runtime) slip through zod validation since they're valid JSON with the right shape —
@@ -22,7 +23,7 @@ async function runScriptWriterAgent(project, audience, angle, feedback = null) {
 
         lastOutput = output;
         lastViolations = violations;
-        console.warn(`[Script Writer Agent] Attempt ${attempt} violated content rules:`, violations);
+        logger.warn({ attempt, violations }, `[Script Writer Agent] Attempt ${attempt} violated content rules`);
 
         if (attempt < 2) {
             userPrompt += `\n\nYour previous draft violated these rules — fix them and return a corrected FULL script (all fields, not a diff):\n${violations.map(v => `- ${v}`).join('\n')}`;

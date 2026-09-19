@@ -2,6 +2,7 @@ const { generate } = require('../../services/ai/aiGenerator');
 const { adAuditSchema } = require('../adsScriptSchemas');
 const { validateScriptOutput } = require('../adsScriptValidation');
 const promptGen = require('../prompts/auditPrompt');
+const logger = require('../../logger');
 
 // Same rationale as scriptWriterAgent.js: the audit sometimes correctly *identifies*
 // a rule violation in its own notes but doesn't actually fix it in finalScript
@@ -24,7 +25,7 @@ async function runAuditAgent(project, audience, angle, draftScript, feedback = n
 
         lastOutput = output;
         lastViolations = violations;
-        console.warn(`[Audit Agent] Attempt ${attempt} finalScript still violated content rules:`, violations);
+        logger.warn({ attempt, violations }, `[Audit Agent] Attempt ${attempt} finalScript still violated content rules`);
 
         if (attempt < 2) {
             userPrompt += `\n\nYour rewritten finalScript still violates these rules — you identified some of them in auditNotes but did not actually fix them. Return a corrected finalScript (all fields, not a diff) that genuinely resolves:\n${violations.map(v => `- ${v}`).join('\n')}`;
