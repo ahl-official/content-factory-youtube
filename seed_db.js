@@ -196,6 +196,70 @@ RULES: Must feel like a personal attack (in a good way). Must name a specific be
 EXAMPLE: "You've been wearing caps for 3 years. Not because you like caps. Because you're terrified someone will see your crown."
 EXAMPLE: "You take photos from exactly one angle. You know which one. And you delete the rest."
 EXAMPLE: "Your LinkedIn profile picture is from 2019. Before it got bad. I know."`
+    },
+    {
+      id: "13",
+      type: "Text",
+      name: "Viralish #1: Relatable Text Hook (POV/FOMO)",
+      notes: `FORMULA: "POV: You [common relatable hair loss struggle/behavior]".
+Target the viewer's private habits and insecurities.
+82% RULE: 82% of viewers read this on-screen text before they ever listen to audio.
+EXAMPLE: "POV: You've been checking your crown with two mirrors every morning for 6 months."
+EXAMPLE: "POV: When your hair looks fine in the bathroom mirror, but the car visor mirror tells the truth."`
+    },
+    {
+      id: "14",
+      type: "Text",
+      name: "Viralish #2: Situational Text Hook (Specific Scenario)",
+      notes: `FORMULA: "When [specific trigger event happens that exposes thinning/loss]".
+Anchors the video to a concrete, emotionally charged everyday scene.
+EXAMPLE: "When the overhead salon light hits your scalp and you realize it's worse than you thought."
+EXAMPLE: "When the wind blows at the metro station and you instinctively reach for your head."`
+    },
+    {
+      id: "15",
+      type: "Text",
+      name: "Viralish #3: Contextual Text Hook (Story Bridge)",
+      notes: `FORMULA: Backstory / distance / emotional bridge explaining why this consultation matters.
+Gives instant documentary credibility and stakes.
+EXAMPLE: "He flew 1,200 km to fix what a ₹5,000 patch did to his scalp."
+EXAMPLE: "He spent ₹2.5 Lakhs on a hair transplant that failed. Today we gave him his hairline back."`
+    },
+    {
+      id: "16",
+      type: "Text",
+      name: "Viralish #4: Transformational Text Hook (Outcome Contrast)",
+      notes: `FORMULA: [Past painful state] → [Present empowered state].
+High-contrast juxtaposition showing the physical and emotional transformation.
+EXAMPLE: "From wearing caps in 40°C heat to swimming without a second thought."
+EXAMPLE: "Norwood 6 at age 24. Full head of hair 90 minutes later. No surgery."`
+    },
+    {
+      id: "17",
+      type: "Text",
+      name: "Viralish #5: Invitational Text Hook (Secret Tribe)",
+      notes: `FORMULA: "If you've been secretly [doing hidden behavior], watch this."
+Speaks directly to the silent lurker who hasn't reached out to a clinic yet.
+EXAMPLE: "If you've been secretly googling 'hair system maintenance' at 2 AM, watch this."
+EXAMPLE: "If you've been hiding your receding hairline with clever combing for 2 years, stop."`
+    },
+    {
+      id: "18",
+      type: "Text",
+      name: "Viralish #6: Anchoring Hook (Expectation Grounding)",
+      notes: `FORMULA: Volume Knob that grounds the viewer with a specific list or number.
+Reduces cognitive friction by setting clear boundaries on what they'll learn.
+EXAMPLE: "The 3 questions every man asks before getting a hair patch (and the brutal honest answers)."
+EXAMPLE: "Everything you need to know about hair toppers before spending a single Rupee."`
+    },
+    {
+      id: "19",
+      type: "Text",
+      name: "Viralish #7: Controversial Text Hook (Debate Starter)",
+      notes: `FORMULA: Polarizing statement that challenges mainstream beliefs and triggers comment debates.
+Drives high algorithm engagement and watch-time retention.
+EXAMPLE: "Stop getting hair transplants before you check your donor area."
+EXAMPLE: "Why cheap ₹5,000 hair patches destroy your real hair."`
     }
   ],
   thumbnailStyles: [

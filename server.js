@@ -12,6 +12,8 @@ const config = require('./config');
 const logger = require('./logger');
 const { OpenAI } = require('openai');
 const { GoogleSpreadsheet } = require('google-spreadsheet');
+const fs = require('fs');
+const path = require('path');
 const { JWT } = require('google-auth-library');
 
 const app = express();
@@ -112,7 +114,18 @@ let reelDbCacheTime = 0;
 const REEL_CACHE_TTL = 30000; // 30 seconds
 
 app.get('/api/db/load', async (req, res) => {
-  if (!doc) return res.json({ topics: [], targetAudiences: [], creatorReferences: [], sirStyleGuide: '', activeCreatorId: null, activeAudienceId: null, hookLibrary: [], videoFormats: [] });
+  if (!doc) {
+    const localDbPath = path.join(__dirname, 'local_reel_db.json');
+    if (fs.existsSync(localDbPath)) {
+      try {
+        const localData = JSON.parse(fs.readFileSync(localDbPath, 'utf8'));
+        return res.json(localData);
+      } catch (e) {
+        logger.error({ err: e }, "Local DB load error");
+      }
+    }
+    return res.json({ topics: [], targetAudiences: [], creatorReferences: [], sirStyleGuide: '', activeCreatorId: null, activeAudienceId: null, hookLibrary: [], videoFormats: [] });
+  }
   if (reelDbCache && (Date.now() - reelDbCacheTime < REEL_CACHE_TTL)) {
     return res.json(reelDbCache);
   }
@@ -154,7 +167,20 @@ app.get('/api/db/load', async (req, res) => {
 let isSavingDb = false;
 
 app.post('/api/db/save', async (req, res) => {
-  if (!doc) return res.json({ success: true, warning: "No DB connection" });
+  if (!doc) {
+    const localDbPath = path.join(__dirname, 'local_reel_db.json');
+    try {
+      let localData = {};
+      if (fs.existsSync(localDbPath)) {
+        localData = JSON.parse(fs.readFileSync(localDbPath, 'utf8'));
+      }
+      Object.assign(localData, req.body);
+      fs.writeFileSync(localDbPath, JSON.stringify(localData, null, 2));
+      return res.json({ success: true, local: true });
+    } catch (e) {
+      return res.status(500).json({ error: e.message });
+    }
+  }
   if (isSavingDb) return res.status(429).json({ error: "DB Save already in progress (Mutex locked)" });
 
   isSavingDb = true;
