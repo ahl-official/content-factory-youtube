@@ -57,6 +57,10 @@ function createTopic(title, targetAudienceId = null, brandVoiceId = null) {
   };
 }
 
+// Dropdowns hand back ids as text, while ids loaded from the sheet can be numbers
+// (1) or text ('story-about-me'), so lookups compare them as text.
+const sameId = (a, b) => a !== null && a !== undefined && b !== null && b !== undefined && String(a) === String(b);
+
 // Reel DB sync: the app keeps a snapshot of what the sheet holds and sends only
 // the difference to /api/db/patch. Sending everything no longer fits in
 // Vercel's 4.5 MB request limit.
@@ -379,7 +383,7 @@ function App() {
     }
   };
 
-  const currentTopic = topics.find(t => t.id === activeTopic);
+  const currentTopic = topics.find(t => sameId(t.id, activeTopic));
 
   if (isLoadingDB) {
     return (
@@ -499,16 +503,16 @@ function App() {
         </>
       ) : engineMode === 'youtube' ? (
         <YoutubeFactory
-          activeAudience={targetAudiences.find(a => a.id === activeAudienceId)}
-          activeBrandVoice={brandVoices.find(b => b.id === activeBrandVoiceId)}
-          activeEditingStyle={editingStyles.find(e => e.id === activeEditingStyleId)}
-          activeThumbnailStyle={thumbnailStyles.find(t => t.id === activeThumbnailStyleId)}
-          activeCreator={creatorReferences.find(c => c.id === activeCreatorId)}
+          activeAudience={targetAudiences.find(a => sameId(a.id, activeAudienceId))}
+          activeBrandVoice={brandVoices.find(b => sameId(b.id, activeBrandVoiceId))}
+          activeEditingStyle={editingStyles.find(e => sameId(e.id, activeEditingStyleId))}
+          activeThumbnailStyle={thumbnailStyles.find(t => sameId(t.id, activeThumbnailStyleId))}
+          activeCreator={creatorReferences.find(c => sameId(c.id, activeCreatorId))}
           sirStyleGuide={sirStyleGuide}
         />
       ) : engineMode === 'adsscript' ? (
         <AdsScriptFactory
-          activeAudience={targetAudiences.find(a => a.id === activeAudienceId)}
+          activeAudience={targetAudiences.find(a => sameId(a.id, activeAudienceId))}
           targetAudiences={targetAudiences}
           sirStyleGuide={sirStyleGuide}
         />
@@ -805,13 +809,13 @@ function TopicDetail({ topic, updateTopic, onBack, setError, sirStyleGuide, lear
     setIsRunningAgent(true);
     setError('');
     try {
-      const audienceRef = targetAudiences.find(a => a.id === topic.targetAudienceId);
+      const audienceRef = targetAudiences.find(a => sameId(a.id, topic.targetAudienceId));
       const targetAudience = audienceRef ? audienceRef.notes : null;
-      const brandRef = brandVoices.find(b => b.id === topic.brandVoiceId);
+      const brandRef = brandVoices.find(b => sameId(b.id, topic.brandVoiceId));
       const brandVoice = brandRef ? { name: brandRef.name, tone: brandRef.tone, rules: brandRef.rules } : null;
-      const thumbRef = thumbnailStyles?.find(t => t.id === topic.thumbnailStyleId);
+      const thumbRef = thumbnailStyles?.find(t => sameId(t.id, topic.thumbnailStyleId));
       const thumbnailStyle = thumbRef ? { name: thumbRef.name, rules: thumbRef.rules } : null;
-      const editRef = editingStyles?.find(e => e.id === topic.editingStyleId);
+      const editRef = editingStyles?.find(e => sameId(e.id, topic.editingStyleId));
       const editingStyle = editRef ? { name: editRef.name, rules: editRef.rules } : null;
       const prevAgentIdx = AGENTS_LIST.findIndex(a => a.key === agentKey) - 1;
       let prevOutput = prevAgentIdx >= 0 && topic.agentOutputs ? (topic.agentOutputs[AGENTS_LIST[prevAgentIdx].key] || '') : '';
@@ -861,13 +865,13 @@ function TopicDetail({ topic, updateTopic, onBack, setError, sirStyleGuide, lear
     setIsRunningPipeline(true);
     setError('');
     try {
-      const audienceRef = targetAudiences.find(a => a.id === topic.targetAudienceId);
+      const audienceRef = targetAudiences.find(a => sameId(a.id, topic.targetAudienceId));
       const targetAudience = audienceRef ? audienceRef.notes : null;
-      const brandRef = brandVoices.find(b => b.id === topic.brandVoiceId);
+      const brandRef = brandVoices.find(b => sameId(b.id, topic.brandVoiceId));
       const brandVoice = brandRef ? { name: brandRef.name, tone: brandRef.tone, rules: brandRef.rules } : null;
-      const thumbRef = thumbnailStyles?.find(t => t.id === topic.thumbnailStyleId);
+      const thumbRef = thumbnailStyles?.find(t => sameId(t.id, topic.thumbnailStyleId));
       const thumbnailStyle = thumbRef ? { name: thumbRef.name, rules: thumbRef.rules } : null;
-      const editRef = editingStyles?.find(e => e.id === topic.editingStyleId);
+      const editRef = editingStyles?.find(e => sameId(e.id, topic.editingStyleId));
       const editingStyle = editRef ? { name: editRef.name, rules: editRef.rules } : null;
 
       const res = await fetch(`${API_URL}/agents/pipeline`, {
@@ -908,7 +912,7 @@ function TopicDetail({ topic, updateTopic, onBack, setError, sirStyleGuide, lear
       const fetchAngles = async () => {
         setIsGenerating(true);
         try {
-          const audienceRef = targetAudiences.find(a => a.id === topic.targetAudienceId);
+          const audienceRef = targetAudiences.find(a => sameId(a.id, topic.targetAudienceId));
           const targetAudience = audienceRef ? audienceRef.notes : null;
           const res = await fetch(`${API_URL}/angles`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -989,14 +993,14 @@ function TopicDetail({ topic, updateTopic, onBack, setError, sirStyleGuide, lear
     setIsGenerating(true);
     setError('');
     try {
-      const creatorRef = creatorReferences.find(c => c.id === activeCreatorId);
+      const creatorRef = creatorReferences.find(c => sameId(c.id, activeCreatorId));
       const creatorInspiration = creatorRef ? (creatorRef.styleNotes || creatorRef.notes) : null;
-      const audienceRef = targetAudiences.find(a => a.id === topic.targetAudienceId);
+      const audienceRef = targetAudiences.find(a => sameId(a.id, topic.targetAudienceId));
       const targetAudience = audienceRef ? audienceRef.notes : null;
-      const brandRef = brandVoices.find(b => b.id === topic.brandVoiceId);
+      const brandRef = brandVoices.find(b => sameId(b.id, topic.brandVoiceId));
       const brandVoice = brandRef ? { name: brandRef.name, tone: brandRef.tone, rules: brandRef.rules } : null;
 
-      const videoFormatRef = videoFormats.find(f => f.id === topic.videoFormatId);
+      const videoFormatRef = videoFormats.find(f => sameId(f.id, topic.videoFormatId));
       const videoFormat = videoFormatRef ? { name: videoFormatRef.name, baseType: videoFormatRef.baseType, rules: videoFormatRef.rules } : null;
 
       const context = topic.chatHistory.map(m => `${m.role === 'user' ? 'WRITER' : 'AI'}: ${m.content}`).join('\n');
@@ -1035,15 +1039,15 @@ function TopicDetail({ topic, updateTopic, onBack, setError, sirStyleGuide, lear
         feedback: v.feedback,
       }));
 
-      const creatorRef = creatorReferences.find(c => c.id === activeCreatorId);
+      const creatorRef = creatorReferences.find(c => sameId(c.id, activeCreatorId));
       const creatorInspiration = creatorRef ? (creatorRef.styleNotes || creatorRef.notes) : null;
-      const audienceRef = targetAudiences.find(a => a.id === topic.targetAudienceId);
+      const audienceRef = targetAudiences.find(a => sameId(a.id, topic.targetAudienceId));
       const targetAudience = audienceRef ? audienceRef.notes : null;
 
-      const brandRef = brandVoices.find(b => b.id === topic.brandVoiceId);
+      const brandRef = brandVoices.find(b => sameId(b.id, topic.brandVoiceId));
       const brandVoice = brandRef ? { name: brandRef.name, tone: brandRef.tone, rules: brandRef.rules } : null;
 
-      const videoFormatRef = videoFormats.find(f => f.id === topic.videoFormatId);
+      const videoFormatRef = videoFormats.find(f => sameId(f.id, topic.videoFormatId));
       const videoFormat = videoFormatRef ? { name: videoFormatRef.name, baseType: videoFormatRef.baseType, rules: videoFormatRef.rules } : null;
 
       const res = await fetch(`${API_URL}/revise`, {
@@ -1146,7 +1150,7 @@ function TopicDetail({ topic, updateTopic, onBack, setError, sirStyleGuide, lear
       <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: '#fde68a' }}>
         👑 Brand Voice
       </label>
-      <select className="input-field" style={{ padding: '0.5rem' }} value={topic.brandVoiceId || ''} onChange={e => updateTopic(topic.id, { brandVoiceId: e.target.value ? parseInt(e.target.value) : null })}>
+      <select className="input-field" style={{ padding: '0.5rem' }} value={topic.brandVoiceId || ''} onChange={e => updateTopic(topic.id, { brandVoiceId: e.target.value || null })}>
         <option value="">Default Backend Settings</option>
         {brandVoices?.map(b => (
           <option key={b.id} value={b.id}>{b.name}</option>
@@ -1160,7 +1164,7 @@ function TopicDetail({ topic, updateTopic, onBack, setError, sirStyleGuide, lear
       <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: '#fbcfe8' }}>
         🖼️ Thumbnail Style
       </label>
-      <select className="input-field" style={{ padding: '0.5rem' }} value={topic.thumbnailStyleId || ''} onChange={e => updateTopic(topic.id, { thumbnailStyleId: e.target.value ? parseInt(e.target.value) : null })}>
+      <select className="input-field" style={{ padding: '0.5rem' }} value={topic.thumbnailStyleId || ''} onChange={e => updateTopic(topic.id, { thumbnailStyleId: e.target.value || null })}>
         <option value="">Default Backend Settings</option>
         {thumbnailStyles?.map(s => (
           <option key={s.id} value={s.id}>{s.name}</option>
@@ -1174,7 +1178,7 @@ function TopicDetail({ topic, updateTopic, onBack, setError, sirStyleGuide, lear
       <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: '#bae6fd' }}>
         ✂️ Editing Style
       </label>
-      <select className="input-field" style={{ padding: '0.5rem' }} value={topic.editingStyleId || ''} onChange={e => updateTopic(topic.id, { editingStyleId: e.target.value ? parseInt(e.target.value) : null })}>
+      <select className="input-field" style={{ padding: '0.5rem' }} value={topic.editingStyleId || ''} onChange={e => updateTopic(topic.id, { editingStyleId: e.target.value || null })}>
         <option value="">Default Backend Settings</option>
         {editingStyles?.map(s => (
           <option key={s.id} value={s.id}>{s.name}</option>
