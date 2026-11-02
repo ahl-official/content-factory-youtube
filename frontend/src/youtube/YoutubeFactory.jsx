@@ -445,7 +445,7 @@ export default function YoutubeFactory({
                         TargetAudienceRule: locAudience ? `Audience Persona: ${locAudience.name || ''}\nPsychological Profile: ${locAudience.notes || ''}` : '',
                         EditingStyleRule: locEditing ? locEditing.rules || '' : '',
                         ThumbnailStyleRule: locThumbnail ? locThumbnail.rules || '' : '',
-                        CreatorPlaybookRule: locCreator ? `Creator to model after: ${locCreator.name || ''}\nStyle notes: ${locCreator.styleNotes || ''}` : ''
+                        CreatorPlaybookRule: locCreator ? `Creator to model after: ${locCreator.name || ''}\nStyle notes: ${locCreator.styleNotes || locCreator.notes || ''}` : ''
                     };
                     const res = await fetch(`${API_URL}/yt/projects`, {
                         method: 'POST',
