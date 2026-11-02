@@ -33,10 +33,9 @@ const AGENTS_LIST = [
 
 // Topic ids must be unique across every browser, because saves match sheet rows
 // by id. The old counter started at 1 in each browser and reused ids.
-let lastTopicId = 0;
+// Text, not a number: Sheets rounds and reformats long numbers (1.79363E+15).
 function newTopicId() {
-  lastTopicId = Math.max(lastTopicId + 1, Date.now() * 1000 + Math.floor(Math.random() * 1000));
-  return lastTopicId;
+  return 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
 
 function createTopic(title, targetAudienceId = null, brandVoiceId = null) {

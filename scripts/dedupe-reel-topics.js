@@ -9,6 +9,7 @@
 //
 //   node scripts/dedupe-reel-topics.js           # dry run: report only
 //   node scripts/dedupe-reel-topics.js --apply   # back up, then rewrite the sheet
+//   ... --from topics-backup-<date>.json [--apply]  # rebuild from an earlier backup
 //
 // Needs REEL_SHEET_ID (or GOOGLE_SHEET_ID), GOOGLE_SERVICE_ACCOUNT_EMAIL and
 // GOOGLE_PRIVATE_KEY, the same variables the server uses.
@@ -37,7 +38,10 @@ async function main() {
 
   const rows = await sheet.getRows();
   const headers = sheet.headerValues;
-  const raw = rows.map(r => Object.fromEntries(headers.map(h => [h, r.get(h) ?? ''])));
+  const current = rows.map(r => Object.fromEntries(headers.map(h => [h, r.get(h) ?? ''])));
+  // --from <backup.json> rebuilds from an earlier backup instead of the sheet.
+  const fromIdx = process.argv.indexOf('--from');
+  const raw = fromIdx > 0 ? JSON.parse(fs.readFileSync(process.argv[fromIdx + 1], 'utf8')).rows : current;
 
   // Exact copies: identical in every column except id.
   const seen = new Set();
@@ -49,8 +53,9 @@ async function main() {
     return true;
   });
 
-  const base = Date.now() * 1000;
-  const cleaned = kept.map((row, i) => ({ ...row, id: String(base + i) }));
+  // Text ids: Sheets rounds and reformats long numbers (1.79363E+15).
+  const base = 't' + Date.now().toString(36);
+  const cleaned = kept.map((row, i) => ({ ...row, id: `${base}-${i}` }));
   const distinctIds = new Set(raw.map(r => String(r.id))).size;
 
   console.log(`Sheet: "${doc.title}"`);
@@ -61,7 +66,7 @@ async function main() {
   }
 
   const backupPath = path.join(process.cwd(), `topics-backup-${new Date().toISOString().replace(/[:.]/g, '-')}.json`);
-  fs.writeFileSync(backupPath, JSON.stringify({ headers, rows: raw }, null, 2));
+  fs.writeFileSync(backupPath, JSON.stringify({ headers, rows: current }, null, 2));
   console.log(`Backup written: ${backupPath}`);
 
   await sheet.clearRows();
