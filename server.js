@@ -181,6 +181,12 @@ app.post('/api/db/save', async (req, res) => {
       return res.status(500).json({ error: e.message });
     }
   }
+  // Topics are saved through /api/db/patch now. A full topics list here comes
+  // from a tab still running the old app; it would undo newer edits and
+  // re-create the duplicate rows, so refuse it.
+  if (Array.isArray(req.body?.topics)) {
+    return res.status(409).json({ error: "This version of the app is out of date. Reload the page to keep saving." });
+  }
   if (isSavingDb) return res.status(429).json({ error: "DB Save already in progress (Mutex locked)" });
 
   isSavingDb = true;
@@ -336,6 +342,128 @@ app.post('/api/db/save', async (req, res) => {
     res.json({ success: true });
   } catch (e) {
     logger.error({ err: e }, "DB save error");
+    res.status(500).json({ error: e.message });
+  } finally {
+    isSavingDb = false;
+  }
+});
+
+// ─── Incremental save ───────────────────────────────────────────────────────
+// The full /api/db/save payload (every topic with all its scripts) grew past
+// Vercel's 4.5 MB request limit, so every save was rejected. The frontend now
+// sends only what changed since the last successful save:
+//   { upserts: { topics: [item, ...] }, deletes: { topics: [id, ...] }, settings: { key: value } }
+// Rows are matched by `id`. Rows and settings keys not mentioned are left untouched.
+const toCell = v => (typeof v === 'object' && v !== null ? JSON.stringify(v) : String(v !== undefined && v !== null ? v : ''));
+
+function applyPatchLocally(data, { upserts = {}, deletes = {}, settings = {} }) {
+  for (const key of new Set([...Object.keys(upserts), ...Object.keys(deletes)])) {
+    const removeIds = new Set((deletes[key] || []).map(String));
+    const list = (Array.isArray(data[key]) ? data[key] : []).filter(item => !removeIds.has(String(item.id)));
+    for (const item of upserts[key] || []) {
+      const i = list.findIndex(existing => String(existing.id) === String(item.id));
+      if (i >= 0) list[i] = item; else list.push(item);
+    }
+    data[key] = list;
+  }
+  Object.assign(data, settings);
+  return data;
+}
+
+app.post('/api/db/patch', async (req, res) => {
+  const { upserts = {}, deletes = {}, settings = {} } = req.body || {};
+  if (!doc) {
+    const localDbPath = path.join(__dirname, 'local_reel_db.json');
+    try {
+      const localData = fs.existsSync(localDbPath) ? JSON.parse(fs.readFileSync(localDbPath, 'utf8')) : {};
+      fs.writeFileSync(localDbPath, JSON.stringify(applyPatchLocally(localData, { upserts, deletes, settings }), null, 2));
+      return res.json({ success: true, local: true });
+    } catch (e) {
+      return res.status(500).json({ error: e.message });
+    }
+  }
+  if (isSavingDb) return res.status(429).json({ error: "DB Save already in progress (Mutex locked)" });
+
+  isSavingDb = true;
+  try {
+    await doc.loadInfo();
+
+    for (const key of new Set([...Object.keys(upserts), ...Object.keys(deletes)])) {
+      if (key.startsWith('YT_') || key === 'Settings') continue;
+      const items = Array.isArray(upserts[key]) ? upserts[key] : [];
+      const removeIds = new Set((Array.isArray(deletes[key]) ? deletes[key] : []).map(String));
+      const incomingHeaders = new Set(['id']);
+      items.forEach(item => Object.keys(item).forEach(k => incomingHeaders.add(k)));
+
+      let sheet = doc.sheetsByTitle[key];
+      if (!sheet) {
+        if (items.length === 0) continue;
+        sheet = await doc.addSheet({ title: key, headerValues: Array.from(incomingHeaders) });
+      } else {
+        // Only ever add columns; never drop ones other rows still use.
+        await sheet.loadHeaderRow();
+        const missing = Array.from(incomingHeaders).filter(h => !sheet.headerValues.includes(h));
+        if (missing.length > 0) {
+          const headers = [...sheet.headerValues, ...missing];
+          await sheet.resize({ rowCount: sheet.rowCount || 1, columnCount: Math.max(headers.length, sheet.columnCount || 1) });
+          await sheet.setHeaderRow(headers);
+        }
+      }
+      await sheet.loadHeaderRow();
+      const headers = sheet.headerValues;
+
+      if (removeIds.size > 0) {
+        const rows = await sheet.getRows();
+        // Bottom-up so earlier row numbers stay valid while deleting.
+        for (const row of rows.reverse()) {
+          if (removeIds.has(String(row.get('id')))) await row.delete();
+        }
+      }
+
+      const rows = await sheet.getRows();
+      const rowsToAdd = [];
+      for (const item of items) {
+        const matches = rows.filter(r => String(r.get('id')) === String(item.id));
+        if (matches.length > 1) logger.warn({ sheet: key, id: item.id, count: matches.length }, 'Duplicate ids in sheet; updating the first');
+        const row = matches[0];
+        if (!row) {
+          const rowObj = {};
+          headers.forEach(h => { rowObj[h] = toCell(item[h]); });
+          rowsToAdd.push(rowObj);
+          continue;
+        }
+        let updated = false;
+        headers.forEach(h => {
+          const next = toCell(item[h]);
+          const current = row.get(h) === undefined || row.get(h) === null ? '' : String(row.get(h));
+          if (current !== next) { row.set(h, next); updated = true; }
+        });
+        if (updated) await row.save();
+      }
+      if (rowsToAdd.length > 0) await sheet.addRows(rowsToAdd);
+    }
+
+    if (Object.keys(settings).length > 0) {
+      let sheet = doc.sheetsByTitle['Settings'];
+      if (!sheet) sheet = await doc.addSheet({ title: 'Settings', headerValues: ['Key', 'Value'] });
+      await sheet.loadHeaderRow();
+      const rows = await sheet.getRows();
+      const rowsToAdd = [];
+      for (const [k, v] of Object.entries(settings)) {
+        const row = rows.find(r => r.get('Key') === k);
+        if (!row) { rowsToAdd.push({ Key: k, Value: toCell(v) }); continue; }
+        if (String(row.get('Value') ?? '') !== toCell(v)) {
+          row.set('Value', toCell(v));
+          await row.save();
+        }
+      }
+      if (rowsToAdd.length > 0) await sheet.addRows(rowsToAdd);
+    }
+
+    reelDbCache = null;
+    res.json({ success: true });
+  } catch (e) {
+    logger.error({ err: e }, "DB patch error");
     res.status(500).json({ error: e.message });
   } finally {
     isSavingDb = false;

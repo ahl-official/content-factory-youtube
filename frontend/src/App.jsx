@@ -31,21 +31,16 @@ const AGENTS_LIST = [
   { id: 12, key: 'analytics', name: '12. Analytics Agent', icon: '📊', mission: 'Continuously improve content performance.', responsibilities: ['Analyze views', 'Hook retention', 'Average watch time', 'Shares', 'Saves', 'Comments', 'Leads generated', 'CTR', 'Identify winning patterns', 'Recommend future improvements'] }
 ];
 
-function getNextId() {
-  try {
-    const saved = localStorage.getItem('ahl_topics');
-    if (saved) {
-      const topics = JSON.parse(saved);
-      if (topics.length > 0) return Math.max(...topics.map(t => t.id)) + 1;
-    }
-  } catch { }
-  return 1;
+// Topic ids must be unique across every browser, because saves match sheet rows
+// by id. The old counter started at 1 in each browser and reused ids.
+// Text, not a number: Sheets rounds and reformats long numbers (1.79363E+15).
+function newTopicId() {
+  return 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
-let nextId = getNextId();
 
 function createTopic(title, targetAudienceId = null, brandVoiceId = null) {
   return {
-    id: nextId++,
+    id: newTopicId(),
     title,
     chatHistory: [], // Empty initially until angle is chosen
     suggestedAngles: [], // Populated by AI
@@ -60,6 +55,40 @@ function createTopic(title, targetAudienceId = null, brandVoiceId = null) {
     hooks: [], // Generated hooks
     selectedHook: null, // Final approved hook
   };
+}
+
+// Reel DB sync: the app keeps a snapshot of what the sheet holds and sends only
+// the difference to /api/db/patch. Sending everything no longer fits in
+// Vercel's 4.5 MB request limit.
+const DB_ARRAY_KEYS = ['topics', 'creatorReferences', 'targetAudiences', 'hookLibrary', 'brandVoices', 'thumbnailStyles', 'editingStyles', 'videoFormats'];
+const DB_SETTING_KEYS = ['sirStyleGuide', 'activeCreatorId', 'activeAudienceId', 'activeBrandVoiceId', 'activeThumbnailStyleId', 'activeEditingStyleId'];
+
+function snapshotDb(db) {
+  const snap = {};
+  DB_ARRAY_KEYS.forEach(k => { snap[k] = new Map((db[k] || []).map(item => [String(item.id), JSON.stringify(item)])); });
+  DB_SETTING_KEYS.forEach(k => { snap[k] = JSON.stringify(db[k] || ''); });
+  return snap;
+}
+
+// Returns null when nothing changed.
+function diffDb(saved, db) {
+  const upserts = {}, deletes = {}, settings = {};
+  DB_ARRAY_KEYS.forEach(k => {
+    const list = db[k] || [];
+    const before = saved[k];
+    const changed = list.filter(item => before.get(String(item.id)) !== JSON.stringify(item));
+    if (changed.length > 0) upserts[k] = changed;
+    // Anti-wipe, as in /api/db/save: an empty list never deletes the whole sheet.
+    if (list.length === 0) return;
+    const ids = new Set(list.map(item => String(item.id)));
+    const removed = [...before.keys()].filter(id => !ids.has(id));
+    if (removed.length > 0) deletes[k] = removed;
+  });
+  DB_SETTING_KEYS.forEach(k => {
+    if (saved[k] !== JSON.stringify(db[k] || '')) settings[k] = db[k] || '';
+  });
+  const empty = [upserts, deletes, settings].every(o => Object.keys(o).length === 0);
+  return empty ? null : { upserts, deletes, settings };
 }
 
 // Default audience segments the Ads Script Writer engine expects to exist in the
@@ -153,6 +182,11 @@ function App() {
   const [activeThumbnailStyleId, setActiveThumbnailStyleId] = useState(null);
   const [activeEditingStyleId, setActiveEditingStyleId] = useState(null);
 
+  const lastSavedDbRef = useRef(null); // snapshot of what the sheet holds
+  const latestDbRef = useRef(null);
+  const saveQueueRef = useRef(Promise.resolve());
+  const saveRetryRef = useRef(null);
+
   // 0. OAuth Callback Intercept
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -188,6 +222,7 @@ function App() {
         return res.json();
       })
       .then(data => {
+        lastSavedDbRef.current = snapshotDb(data);
         if (data.topics) setTopics(data.topics);
         if (data.sirStyleGuide) setSirStyleGuide(data.sirStyleGuide);
         if (data.creatorReferences) setCreatorReferences(data.creatorReferences);
@@ -244,11 +279,34 @@ function App() {
       .finally(() => setIsLoadingDB(false));
   }, []);
 
+  // Saves run one at a time and always diff the latest state, so a retry can
+  // never send older values over newer ones.
+  const queueDbSave = () => {
+    saveQueueRef.current = saveQueueRef.current.then(async () => {
+      const db = latestDbRef.current;
+      const patch = db && lastSavedDbRef.current && diffDb(lastSavedDbRef.current, db);
+      if (!patch) return;
+      clearTimeout(saveRetryRef.current);
+      try {
+        const res = await fetch(`${API_URL}/db/patch`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(patch)
+        });
+        if (!res.ok) throw new Error(`Save failed (${res.status})`);
+        lastSavedDbRef.current = snapshotDb(db);
+      } catch (e) {
+        console.error("DB Sync Error:", e);
+        saveRetryRef.current = setTimeout(queueDbSave, 10000);
+      }
+    });
+  };
+
   // 2. Sync to DB whenever core state changes
   useEffect(() => {
     if (isLoadingDB || !dbLoadSuccess || engineMode !== 'reels') return; // Don't overwrite DB during initial load, failure, or if we are actively operating locally inside the youtube engine
 
-    const payload = {
+    latestDbRef.current = {
       topics,
       sirStyleGuide,
       creatorReferences,
@@ -258,20 +316,14 @@ function App() {
       thumbnailStyles,
       editingStyles,
       videoFormats,
-      activeCreatorId: activeCreatorId || '',
-      activeAudienceId: activeAudienceId || '',
-      activeBrandVoiceId: activeBrandVoiceId || '',
-      activeThumbnailStyleId: activeThumbnailStyleId || '',
-      activeEditingStyleId: activeEditingStyleId || ''
+      activeCreatorId,
+      activeAudienceId,
+      activeBrandVoiceId,
+      activeThumbnailStyleId,
+      activeEditingStyleId
     };
 
-    const saveTimeout = setTimeout(() => {
-      fetch(`${API_URL}/db/save`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      }).catch(e => console.error("DB Sync Error:", e));
-    }, 1500); // Debounce to prevent race condition row-duplication on G-Sheets
+    const saveTimeout = setTimeout(queueDbSave, 1500); // Debounce to prevent race condition row-duplication on G-Sheets
 
     return () => clearTimeout(saveTimeout);
   }, [topics, sirStyleGuide, creatorReferences, targetAudiences, hookLibrary, brandVoices, thumbnailStyles, editingStyles, videoFormats, activeCreatorId, activeAudienceId, activeBrandVoiceId, activeThumbnailStyleId, activeEditingStyleId, isLoadingDB]);
@@ -938,7 +990,7 @@ function TopicDetail({ topic, updateTopic, onBack, setError, sirStyleGuide, lear
     setError('');
     try {
       const creatorRef = creatorReferences.find(c => c.id === activeCreatorId);
-      const creatorInspiration = creatorRef ? creatorRef.styleNotes : null;
+      const creatorInspiration = creatorRef ? (creatorRef.styleNotes || creatorRef.notes) : null;
       const audienceRef = targetAudiences.find(a => a.id === topic.targetAudienceId);
       const targetAudience = audienceRef ? audienceRef.notes : null;
       const brandRef = brandVoices.find(b => b.id === topic.brandVoiceId);
@@ -984,7 +1036,7 @@ function TopicDetail({ topic, updateTopic, onBack, setError, sirStyleGuide, lear
       }));
 
       const creatorRef = creatorReferences.find(c => c.id === activeCreatorId);
-      const creatorInspiration = creatorRef ? creatorRef.styleNotes : null;
+      const creatorInspiration = creatorRef ? (creatorRef.styleNotes || creatorRef.notes) : null;
       const audienceRef = targetAudiences.find(a => a.id === topic.targetAudienceId);
       const targetAudience = audienceRef ? audienceRef.notes : null;
 
@@ -1929,7 +1981,7 @@ export function CreatorPlaybookView({ creatorReferences, setCreatorReferences, a
                   </div>
                 </div>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', whiteSpace: 'pre-wrap', lineHeight: 1.5, margin: 0, marginBottom: '1rem' }}>
-                  {creator.styleNotes}
+                  {creator.styleNotes || creator.notes}
                 </p>
                 <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto' }}>
                   {isActive ? (

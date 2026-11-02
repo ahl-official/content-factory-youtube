@@ -378,11 +378,15 @@ EXAMPLE: "Why cheap ₹5,000 hair patches destroy your real hair."`
   activeEditingStyleId: "1"
 };
 
-fetch('http://localhost:3000/api/db/save', {
+// /api/db/save no longer accepts topics; they go through /api/db/patch.
+const { topics, ...rest } = payload;
+const post = (url, body) => fetch(url, {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify(payload)
-})
-  .then(res => res.json())
+  body: JSON.stringify(body)
+}).then(res => res.json());
+
+post('http://localhost:3000/api/db/save', rest)
+  .then(() => post('http://localhost:3000/api/db/patch', { upserts: { topics } }))
   .then(data => console.log("Seeding complete:", data))
   .catch(console.error);
