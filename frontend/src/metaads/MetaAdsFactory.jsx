@@ -48,7 +48,7 @@ export default function MetaAdsFactory() {
   if (!META_ADS_URL) {
     return (
       <div className="app-container" style={{ textAlign: 'center', paddingTop: '10vh' }}>
-        <h2>🎯 Meta Ads Agent not connected yet</h2>
+        <h2>🎯 AI Meta Ads Agent not connected yet</h2>
         <p style={{ opacity: 0.7, maxWidth: 480, margin: '0.75rem auto' }}>
           Set <code>VITE_META_ADS_URL</code> in <code>frontend/.env</code> (local dev) and in the
           Vercel Project Settings for this app (production) once the Meta Ads Agent has been
@@ -124,7 +124,7 @@ export default function MetaAdsFactory() {
             >
               <div className="loader" style={{ width: '32px', height: '32px', marginBottom: '0.75rem' }} />
               <p style={{ opacity: 0.7, fontSize: '0.9rem' }}>
-                {stuck ? 'Still not loading — click Reload above, or open in a new tab.' : 'Loading Meta Ads Agent…'}
+                {stuck ? 'Still not loading — click Reload above, or open in a new tab.' : 'Loading AI Meta Ads Agent…'}
               </p>
             </div>
           )}

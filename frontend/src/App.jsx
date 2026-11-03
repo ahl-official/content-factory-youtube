@@ -412,10 +412,10 @@ function App() {
           <p className="subtitle">American Hairline · Multi-Topic Pipeline</p>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', padding: '0.3rem', borderRadius: '12px' }}>
-          <button className={`btn ${engineMode === 'reels' ? '' : 'btn-secondary'}`} style={{ padding: '0.5rem 1rem' }} onClick={() => setEngineMode('reels')}>🎬 Reel Engine</button>
-          <button className={`btn ${engineMode === 'youtube' ? '' : 'btn-secondary'}`} style={{ padding: '0.5rem 1rem' }} onClick={() => setEngineMode('youtube')}>📺 YouTube Engine</button>
-          <button className={`btn ${engineMode === 'adsscript' ? '' : 'btn-secondary'}`} style={{ padding: '0.5rem 1rem' }} onClick={() => setEngineMode('adsscript')}>📢 Ads Script Writer</button>
-          <button className={`btn ${engineMode === 'metaads' ? '' : 'btn-secondary'}`} style={{ padding: '0.5rem 1rem' }} onClick={() => setEngineMode('metaads')}>🎯 Meta Ads Agent</button>
+          <button className={`btn ${engineMode === 'reels' ? '' : 'btn-secondary'}`} style={{ padding: '0.5rem 1rem' }} onClick={() => setEngineMode('reels')}>🎬 AI Reel Agent</button>
+          <button className={`btn ${engineMode === 'youtube' ? '' : 'btn-secondary'}`} style={{ padding: '0.5rem 1rem' }} onClick={() => setEngineMode('youtube')}>📺 AI YouTube Agent</button>
+          <button className={`btn ${engineMode === 'adsscript' ? '' : 'btn-secondary'}`} style={{ padding: '0.5rem 1rem' }} onClick={() => setEngineMode('adsscript')}>📢 AI Ads Script Agent</button>
+          <button className={`btn ${engineMode === 'metaads' ? '' : 'btn-secondary'}`} style={{ padding: '0.5rem 1rem' }} onClick={() => setEngineMode('metaads')}>🎯 AI Meta Ads Agent</button>
         </div>
       </header>
 
