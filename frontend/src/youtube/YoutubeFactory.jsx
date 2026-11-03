@@ -385,7 +385,7 @@ export default function YoutubeFactory({
         <div className={view === 'workspace' ? 'yt-viewport-lock' : ''} style={view !== 'workspace' ? { display: 'flex', flexDirection: 'column', height: '100%', marginTop: '0.5rem' } : {}}>
 
             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexShrink: 0, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                <h2 style={{ margin: '0 1rem 0 0', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.2rem' }}>📺 YouTube Engine</h2>
+                <h2 style={{ margin: '0 1rem 0 0', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.2rem' }}>📺 AI YouTube Agent</h2>
                 <button className={view === 'dashboard' ? 'yt-btn-primary' : 'yt-btn-secondary'} onClick={() => { setView('dashboard'); setActiveProjectId(null); }}>Projects Dashboard</button>
                 <button className={view === 'new_project' ? 'yt-btn-primary' : 'yt-btn-secondary'} onClick={() => { setView('new_project'); setActiveProjectId(null); }}>+ New YouTube Video</button>
                 <button className={view === 'settings' ? 'yt-btn-primary' : 'yt-btn-secondary'} onClick={() => setView('settings')}>Auto-Learning Memory</button>

@@ -50,7 +50,7 @@ export default function AdsScriptFactory({ activeAudience, targetAudiences = [],
   return (
     <div style={{ marginTop: '0.5rem' }}>
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap', alignItems: 'center', borderBottom: '1px solid var(--panel-border)', paddingBottom: '1rem' }}>
-        <h2 style={{ margin: '0 1rem 0 0', fontSize: '1.2rem' }}>📢 Ads Script Writer</h2>
+        <h2 style={{ margin: '0 1rem 0 0', fontSize: '1.2rem' }}>📢 AI Ads Script Agent</h2>
         <button className={`btn ${view === 'dashboard' ? '' : 'btn-secondary'}`} onClick={() => { setView('dashboard'); setActiveProjectId(null); }}>
           Projects {projects.length > 0 && `(${projects.length})`}
         </button>
@@ -261,7 +261,7 @@ function AdsNewProject({ targetAudiences, activeAudience, onCreate }) {
       <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem' }}>Target Audience Segment</label>
       {targetAudiences.length === 0 ? (
         <p style={{ color: '#fca5a5', fontSize: '0.85rem', marginBottom: '1.2rem' }}>
-          No target audiences defined yet. Add one under 🎯 Target Audience in the Reel Engine first.
+          No target audiences defined yet. Add one under 🎯 Target Audience in the AI Reel Agent first.
         </p>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.75rem', marginBottom: '1.2rem' }}>
