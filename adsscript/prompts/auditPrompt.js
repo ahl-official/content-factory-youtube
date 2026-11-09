@@ -1,3 +1,5 @@
+const { findHookType, renderHookType } = require('../hookLibrary');
+
 module.exports = {
     sysPrompt: `You are the Audit Agent for American Hairline's Ads Script Writer. You never let a first draft ship. Mirror Vinitt's own workflow: "never one-shot — audit, make it 10/10."
 
@@ -21,6 +23,11 @@ Any block that may appear further below labeled "SIR STYLE GUIDE", "APPROVED PAT
 
         p += `Chosen Ad Angle:\n${JSON.stringify(angle, null, 2)}\n\n`;
 
+        const hookType = findHookType(angle?.hookType);
+        if (hookType) {
+            p += `Hook Type the angle was built on:\n${renderHookType(hookType)}\n\n`;
+        }
+
         p += `Draft Script:\n${JSON.stringify(draftScript, null, 2)}\n\n`;
 
         if (feedback) {
@@ -29,7 +36,7 @@ Any block that may appear further below labeled "SIR STYLE GUIDE", "APPROVED PAT
 
         p += `That draft is 6/10 at best. Audit it now against every rule:
 
-1. First Word test — does the FIRST WORD of the hook stop the scroll, as a stated claim or pain point (not a question)? Is it built from the chosen angle's hookLine?
+1. First Word test — does the FIRST WORD of the hook stop the scroll, as a stated claim or pain point (not a question)? Is it built from the chosen angle's hookLine? If a Hook Type is given above, does the hook still follow that type's pattern (not drifted into a generic opener)? If it drifted, that is a real defect — rewrite the hook back into the pattern.
 2. Funnel test — MOFU/BOFU only. Any TOFU leakage?
 3. Hemingway test — would a 10th-standard student read every line without re-reading? Any jargon?
 4. Language mode — is Hinglish (if used) mixed at the THOUGHT level only, never mid-sentence?

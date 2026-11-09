@@ -2,6 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 
 const API_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api');
 
+// Hook types come from adsscript/hookLibrary.js (backend); ids are snake_case.
+const hookTypeLabel = (id) => String(id).split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') + ' Hook';
+
 const STAGE_LABELS = {
   draft: 'Draft',
   angles_generated: 'Angles Ready',
@@ -602,6 +605,11 @@ function AdsWorkspace({ project: initialProject, targetAudiences, onBack, onProj
                         }}
                       >
                         <div style={{ fontWeight: 600, marginBottom: '0.4rem' }}>{angle.angleTitle}</div>
+                        {angle.hookType && (
+                          <div style={{ display: 'inline-block', fontSize: '0.7rem', padding: '0.15rem 0.5rem', borderRadius: '999px', background: 'rgba(139,92,246,0.15)', color: '#c4b5fd', marginBottom: '0.4rem' }}>
+                            🪝 {hookTypeLabel(angle.hookType)}
+                          </div>
+                        )}
                         <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>"{angle.hookLine}"</div>
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                           {angle.awarenessStage} · Pain point: {angle.audiencePainPoint}
