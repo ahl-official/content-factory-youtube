@@ -3,6 +3,8 @@ const { z } = require('zod');
 const adAngleItemSchema = z.object({
     id: z.string(),
     angleTitle: z.string(),
+    // Optional: projects saved before the hook library existed have no hookType.
+    hookType: z.string().optional(),
     hookLine: z.string(),
     audiencePainPoint: z.string(),
     awarenessStage: z.string(),

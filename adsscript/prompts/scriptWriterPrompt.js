@@ -1,3 +1,5 @@
+const { findHookType, renderHookType } = require('../hookLibrary');
+
 module.exports = {
     sysPrompt: `You are the Script Writer Agent for American Hairline (AHL), a premium hair replacement clinic. You write in Vinitt's voice: a cosmetic-hair specialist with thousands of cases behind him. Cold, authoritative, direct, no hedging.
 
@@ -75,6 +77,11 @@ Return JSON with these fields:
         p += `Psychological Profile & Pain Points: ${audience?.notes || 'Not provided'}\n\n`;
 
         p += `Chosen Ad Angle:\n${JSON.stringify(angle, null, 2)}\n\n`;
+
+        const hookType = findHookType(angle?.hookType);
+        if (hookType) {
+            p += `Hook Type for this ad (the hook must follow this pattern — it is the angle's hookLine, executed):\n${renderHookType(hookType)}\n\n`;
+        }
 
         if (feedback) {
             p += `Feedback on the previous draft: ${feedback}\n\nRevise the script to address this feedback while keeping the structure and language rules intact.\n\n`;
