@@ -137,6 +137,7 @@ Inference rules when fields are unstated:
 - CATEGORY: infer from content — transplant / toppers / permanent_extensions / wig. If genuinely ambiguous, default \`transplant\`.
 - BRAND: default \`ahl\`.
 - CTA: pick share-based if the topic is awareness-driven (celebrity, callout, education), comment-based if it's a soft conversion (introducing a solution AHL offers).
+- STRUCTURE: if Vinitt names a story or educational structure ("hero's journey", "myth reel", "client story"), use it; if he tells a client's before/after story, use Hero's Journey; otherwise the default 7 blocks.
 
 Pick the strongest hook angle from the content. Obey the First Word Rule strictly. Output the script only.`;
 }

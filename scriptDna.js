@@ -1,5 +1,7 @@
 'use strict';
 
+const { STRUCTURES_PROMPT } = require('./storyStructures');
+
 /**
  * The "Vinitt Viral Script DNA" — v2.
  *
@@ -108,6 +110,8 @@ The 7 blocks below must perfectly execute the 4-Part "1M+ View" Macro Pacing:
 
 For "bad vs good" educational reels, blocks 2-5 are replaced with a contrast structure (bad example → killer line → silent good example × 3). Hook, CTA, and close blocks stay identical.
 
+${STRUCTURES_PROMPT}
+
 # PACING CUES (write these literally into the script)
 
 - "Beat." — short pause for emphasis.
@@ -161,9 +165,10 @@ const AUDIT_PROMPT = `That draft is 6/10 at best. Audit it now against every rul
 5. Pacing — are silences, beats, and hard cuts actually deployed for impact, or just sprinkled?
 6. Language mode — does the script honour the specified mode at the thought level? Zero mid-sentence mixing?
 7. Hook construction & Speed-to-Value — visual overlay says one thing, voiceover says another? Is the opening voiceover strictly staccato (max 5-7 words per sentence) and hitting value under 4 seconds? Any rhythmic monotony?
-8. Truth bomb — is the full-screen graphic line genuinely the most shareable single fact, or generic?
+8. Truth bomb — is the full-screen graphic line genuinely the most shareable single fact, or generic? (Only when the default blocks 2-5 are used; a story or educational structure replaces it.)
 9. Close — purely visual, no voiceover, word-by-word reveal?
 10. Duration — 40-50 sec? Stated explicitly?
+11. Structure — if a story or educational structure was named or used, does every beat appear in order in blocks 2-5, with Hook, CTA and Close unchanged? No invented client names or numbers?
 
 Identify every weakness internally. Then rewrite the FULL script to 10/10 on every axis. Output ONLY the rewritten script — no audit notes, no commentary, no preamble. Start with [HOOK — ...] and end with "Runtime: ~XX sec".`;
 
